@@ -1,0 +1,225 @@
+
+page list1 in stock@pragma
+
+
+type list1 
+{{
+	One-way linked list with heterogenous nodes.
+
+	Go-methods move an internal cursor.
+	
+	Methods that reference "next," insert, remove, and get
+	the next node, relative the the internal cursor.  They
+	do not move the cursor.
+	
+	push and pull methods move the cursor and insert or
+	remove a node at the front or back.  
+}}
+{
+	general method
+	{
+		begin  -- empty
+		{
+		}
+
+		begin ( list1 source [var] )  -- vacate source
+		{
+			if (" not_null?( source.first ) ")
+			{
+				-- don't copy cursor (start front)
+				mo.first:begin( source.first );
+				mo.last:begin( source.last );
+				source.first:reuse;
+				source.last:reuse;
+				source.cursor:reuse;
+			}
+		}
+
+		empty? ()( bool yes ) [const]
+		{
+			mo.first:null?()( yes );
+		}
+
+		go_front  -- before first
+		{
+			mo.cursor:reuse;
+		}
+
+		go_last 
+		{
+			if (" not_null?( mo.last ) ") mo.cursor:reuse:begin( mo.last );
+		}
+
+		go_next 
+		{
+			if (" null?( mo.cursor ) ")
+			{
+				if (" not_null?( mo.first ) ") mo.cursor:reuse:begin( mo.first );
+			}
+			else
+			{
+				mo.cursor:deref:get_link()( link<node1> next );
+				if (" not_null?( next ) ") mo.cursor:reuse:begin( next );
+			}
+		}
+		
+		get_next ()( link<node1> next ) [const]
+		{
+			if (" not_null?( mo.cursor ) ") mo.cursor:deref:get_link()( next );
+		}
+
+		insert_next ( link<node1> ln )
+		{
+			mo:insert( ln );
+		}
+
+		insert_next<t> with init()( <t> )
+		{
+			make_<t>node()( link<node1> ln );
+			mo:insert( ln );
+		}
+
+		remove_next
+		{
+			if (" not_null?( mo.cursor ) ") 
+			{
+				-- node after cursor
+				mo.cursor:deref:get_link()( next );
+				if (" not_null?( next ) ") 
+				{
+					next:deref:get_link()( link<node1> next_next ):unlink;
+					if (" null?( next_next ) ")
+						mo.last:reuse:begin( mo.cursor )
+					else 
+						mo.cursor:deref:set_link( next_next );
+				}
+			}
+			else if (" not_null?( mo.first ) ") 
+			{
+				-- first node
+				mo.first:deref:get_link()( link<node1> next_next ):unlink;
+				if (" null?( next_next ) ")
+				{
+					mo.first:reuse;
+					mo.last:reuse;
+				}
+				else 
+					mo.first:reuse:begin( next_next );
+			}
+		}
+
+		push_front<t> with init()( <t> )
+		{
+			mo:go_front:insert_next<t> with init;
+		}
+
+		push_back<t> with init()( <t> )
+		{
+			mo:go_last:insert_next<t> with init;
+		}
+
+		pull_first<t> ()( link<t> first )
+		{
+			mo:go_front:get_next()( link<node1> next );
+			if (" not_null?( next ) ") 
+			{
+				first:begin( next );
+				mo:remove_next;
+			}
+		}
+	}
+
+
+	misc method
+	{
+		insert ( link<node1> ln ) 
+		{
+			if (" not_null?( mo.cursor ) ")  
+			{
+				-- after cursor
+				mo.cursor:deref:get_link()( link<node1> before ):set_link( ln ); 
+				if (" null?( before ) ")
+					mo.last:reuse:begin( ln )
+				else
+					ln:deref:set_link( before );
+			}
+			else if (" not_null?( mo.first ) ")
+			{
+				-- before first
+				ln:deref:set_link( mo.first );
+				mo.first:reuse:begin( ln );
+			}
+			else 
+			{
+				-- original
+				mo.first:begin( ln );
+				mo.last:begin( ln );
+			}
+		}
+	}
+
+	instance
+	{
+		link<node1> first  [opt];
+		link<node1> last   [opt];
+		link<node1> cursor [opt];
+	}
+
+
+	subroutine make_<t>node ()( link<node1> ln ) with init ()( <t> ) 
+	{
+		ln:begin< <t>node1 >:deref:as_actual< <t>node1 >:begin with init;
+	}
+	
+}
+
+
+type list1<t> from list1
+{{
+	list1 subtype with homogeneous <t>nodes.
+
+	Non-generic base methods are inherited as-is.
+
+	Generic base methods are superceded by non-generic
+	methods in this subtype.
+}}
+{	
+	general method
+	{
+		begin
+		{
+			mo.list1:begin;
+		}
+
+		begin ( list1<t> source [var] )  -- vacate source
+		{
+			mo.list1:begin( *source );
+		}
+
+		get_next ()( link<t> lt ) [const]
+		{
+			mo:list1:get_next()( link<node1> ln );
+			if (" not_null?( ln ) ") lt:begin( ln );
+		}
+
+		insert_next with init()( <t> )
+		{
+			mo.list1:insert_next<t> with init;
+		}
+
+		push_front with init()( <t> )
+		{
+			mo.list1:push_front<t> with init;
+		}
+
+		push_back with init()( <t> )
+		{
+			mo.list1:push_back<t> with init;
+		}
+
+		pull_first ()( link<t> lt )
+		{
+			mo.list1:pull_first<t>()( lt );
+		}
+	}
+}

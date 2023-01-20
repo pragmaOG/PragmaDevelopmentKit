@@ -1,0 +1,51 @@
+
+page trace in alpha@pragma
+
+
+type trace from indexed<fault>  -- restricted
+{{
+	A trace is an indexed set of quit faults.
+
+	A global trace object is automatically created when
+	an application transitions from normal execution to 
+	failure recovery initiated by a quit point.  It
+	persists until execution exits a fail block in the 
+	execution stack. 
+
+	Every time an application quits, it adds a fault to
+	the implicit trace. 
+		
+	The current trace object can only be referenced from
+	a fail block using proxy name ~trace.  This alias only 
+	exists in the local scope of a fail	block and all the 
+	usual proxy rules apply. The trace proxy is [sure,
+	durable,actual,const] which implies	that individual 
+	fault proxies are also [const].
+
+	Faults occur in quit order.  Thus, the original quit
+	fault is first.
+
+	:object and :count are direct methods that supersede 
+	abstract methods in base type.
+
+	A trace is not portable.  To write a trace, write
+	individual faults.  There is no corresponding idea
+	for read.
+}}
+{
+	general
+	{
+		-- begin methods are hidden
+
+		count [const] = proxy [sure,durable,actual,const] int;
+
+		object ( int i ) [const] = proxy [sure,durable,actual,const] fault; 
+	}
+
+	abstract in indexed<fault>
+	{
+		[final] _count ()( int ) [const];	
+
+		[final] _object ( int i ) [const] = proxy [sure,tbd] fault; 
+	}
+}

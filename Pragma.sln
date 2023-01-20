@@ -1,0 +1,73 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32929.386
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Alpha", "Alpha", "{255A8008-710D-4AFE-A7BD-7E430DCCEA37}"
+	ProjectSection(SolutionItems) = preProject
+		Alpha\addr.prag = Alpha\addr.prag
+		Alpha\analog.prag = Alpha\analog.prag
+		Alpha\app.prag = Alpha\app.prag
+		Alpha\array.prag = Alpha\array.prag
+		Alpha\ascii.prag = Alpha\ascii.prag
+		Alpha\atomic.prag = Alpha\atomic.prag
+		Alpha\bool.prag = Alpha\bool.prag
+		Alpha\enumerated.prag = Alpha\enumerated.prag
+		Alpha\etm.prag = Alpha\etm.prag
+		Alpha\expr.prag = Alpha\expr.prag
+		Alpha\extra.prag = Alpha\extra.prag
+		Alpha\fault.prag = Alpha\fault.prag
+		Alpha\float.prag = Alpha\float.prag
+		Alpha\handle.prag = Alpha\handle.prag
+		Alpha\indexed.prag = Alpha\indexed.prag
+		Alpha\indicator.prag = Alpha\indicator.prag
+		Alpha\int.prag = Alpha\int.prag
+		Alpha\link.prag = Alpha\link.prag
+		Alpha\lock.prag = Alpha\lock.prag
+		Alpha\message.prag = Alpha\message.prag
+		Alpha\monitor.prag = Alpha\monitor.prag
+		Alpha\object.prag = Alpha\object.prag
+		Alpha\signal.prag = Alpha\signal.prag
+		Alpha\thread.prag = Alpha\thread.prag
+		Alpha\timer.prag = Alpha\timer.prag
+		Alpha\token_.prag = Alpha\token_.prag
+		Alpha\trace.prag = Alpha\trace.prag
+		Alpha\tuple.prag = Alpha\tuple.prag
+		Alpha\typename.prag = Alpha\typename.prag
+		Alpha\unicode.prag = Alpha\unicode.prag
+		Alpha\utc.prag = Alpha\utc.prag
+		Alpha\word.prag = Alpha\word.prag
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Stock", "Stock", "{C4E497B6-19D3-45E6-B1FC-C82DC73568F4}"
+	ProjectSection(SolutionItems) = preProject
+		Stock\channel.prag = Stock\channel.prag
+		Stock\console.prag = Stock\console.prag
+		Stock\dialect.prag = Stock\dialect.prag
+		Stock\list1.prag = Stock\list1.prag
+		Stock\node.prag = Stock\node.prag
+		Stock\system.prag = Stock\system.prag
+		Stock\text.prag = Stock\text.prag
+		Stock\text_channel.prag = Stock\text_channel.prag
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Kernel", "Kernel", "{0777A58C-FAF1-4221-BE40-3B762A9D39D1}"
+	ProjectSection(SolutionItems) = preProject
+		Kernel\channel.prag = Kernel\channel.prag
+		Kernel\heap.prag = Kernel\heap.prag
+		Kernel\peripheral.prag = Kernel\peripheral.prag
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{3CB684A2-3592-4A4B-9E74-489A820D4CF1}"
+	ProjectSection(SolutionItems) = preProject
+		test\random.prag = test\random.prag
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5FF7CAD7-01CC-4175-95F7-C79AC6B06BC8}
+	EndGlobalSection
+EndGlobal

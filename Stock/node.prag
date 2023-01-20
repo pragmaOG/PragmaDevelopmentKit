@@ -1,0 +1,232 @@
+
+page node in stock@pragma
+
+{{
+	On this page:
+	
+	node			adaptable multi-link base
+	node<#>			generic fixed-link base 
+	node1			single-link base (specialized)
+	node2			double-link base (alias)
+	node3			triple-link base (alias)
+	node<#><t>		generic fixed-link synthetic node 
+	node1<t>		generic synthetic node1 (specialized)
+	node2<t>		generic synthetic node2 (alias)
+	node3<t>		generic synthetic node3 (alias)
+}}
+
+
+
+
+type node [incomplete] from indexed< link<node> >
+{{
+	A node is a multi-link adapatable base type.
+	
+	Nodes interconnect with other nodes using indexed links.
+	A node can have any number of links and link allocation
+	may be dynamic.  
+	
+	This node type is used when a nexus interconnects in 
+	diverse ways.  A derived subtype is responsible for
+	allocating and accessing links.
+
+	Note: Subtype must implement indexed<t> abstract methods.
+	Node methods use indexed object accessor to copy links.
+
+	When node dimension is known and uniform, use a node<#>
+	instead.
+}}
+{
+	general method
+	{
+		begin
+		{
+			mo.indexed< link<node> >:begin;
+		}
+
+		get_link ( int i )( link<node> ln ) [const]
+		{
+			ln:begin( mo:object( i ) );
+		}
+
+		set_link ( int i, link<node> ln )
+		{
+			mo:object( i ):reuse:begin( ln );
+		}
+
+		unlink ( int i )
+		{
+			mo:object( i ):reuse;
+		}
+	}
+
+	abstract method in indexed< link<node> >
+	{
+		[tbd] _count ()( int ) [const];	
+
+		[tbd] _object ( int i ) [const] = proxy [sure,tbd] link<node>; 
+	}
+}
+
+
+type node<#>
+{{
+	A node<#> is a generic fixed dimension node.
+	
+	node<#> linkage is uniform.  That is, a node<#> links
+	other node<#>s of the same dimension.
+
+	A node<#> is technically complete, but doesn't have any
+	practical application as an actual type. It should be 
+	used as a base type for application	types.
+
+	node<'1'> is valid, but a specialized node1 is a better
+	alternative.
+}}
+{
+
+	general method
+	{
+		begin  -- all links null
+		{
+			mo.linkage:begin;  -- all links null
+		}
+
+		get_link ( int i )( link< node<#> > ln ) [const]
+		{
+			mo.linkage:object( i ) ~ln;
+			if (" not_null?( ~ln ) ") ln:begin( ~ln );
+		}
+
+		set_link (int i, link< node<#> > ln )
+		{
+			mo.linkage:object( i ):reuse:begin( ln );
+		}
+
+		unlink ( int i )
+		{
+			mo.linkage:object( i ):reuse;
+		}
+	}
+
+	instance
+	{
+		<#>tuple< link< node<#> > > linkage;
+	}
+}
+
+
+
+type node1 
+{{
+	A node1 is a specialized node<'1'>.
+}}
+{
+	general
+	{
+		begin  -- null link
+		{
+		}
+
+		get_link ()( link<node1> ln ) [const]
+		{
+			if (" not_null?( mo.link<node1> ) ") ln:begin( mo.link<node1> );
+		}
+
+		set_link ( link<node1> ln )
+		{
+			mo.link<node1>:reuse:begin( ln );
+		}
+
+		unlink
+		{
+			mo.link<node1>:reuse;
+		}
+	}
+
+	instance
+	{
+		link<node1> [opt];
+	}
+}
+
+
+
+type <t>node<#> from ( <t>, node<#> )
+{{
+	A node<#><t> is a generic synthetic node.
+
+	<t> must be a complete type, or it can be an incomplete
+	type if it doesn't have any [tbd] abstract methods (which
+	forces the synthetic node to be incomplete).
+
+	All methods are inherited from base types.  
+
+	General :begin uses a co-routine to initialize
+	application type <t>.
+
+	Default :begin can be used if default <t>:begin
+	is available.
+
+	Synthetic nodes of the same dimension can interlink.
+	For example, a <'2'>node<thing> can link a 
+	<'2'>node<widget> and a <'2'>node<gadget>
+}}
+{
+	general method
+	{
+		begin
+		{
+			mo.node<#>:begin;
+			mo.<t>:begin;
+		}
+
+		begin with init ()( <t> )
+		{
+			mo.node<#>:begin;
+			init()( mo.<t> );
+		}
+	}
+}
+
+
+
+type <t>node1 from ( <t>, node1 )
+{{
+	A node1<t> is a specialized <'1'>node<t>.
+
+	All methods are inherited from base types.  
+
+	General :begin uses a co-routine to initialize
+	application type <t>.
+
+	Default :begin can be used if default <t>:begin
+	is available.
+}}
+{
+	general method
+	{
+		begin 
+		{
+			mo.node1:begin;
+			mo.<t>:begin;
+		}
+
+		begin with init ()( <t> )
+		{
+			mo.node1:begin;
+			init()( mo.<t> );
+		}
+	}
+}
+
+
+alias
+{
+	node2 = node<'2'>;
+	node3 = node<'3'>;
+
+	<t>node2 = <t>node<'2'>;
+	<t>node3 = <t>node<'3'>;
+}
+

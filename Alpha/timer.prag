@@ -1,0 +1,51 @@
+
+page timer in alpha@pragma
+
+
+type timer from indicator
+{{
+	A timer is a timed indicator.
+
+	Note:  See alpha\indicator for more info.
+
+	If a period is specified during initialization, the
+	timer is periodic. That is, it will tick at regular 
+	intervals after it starts. Otherwise, the timer will be
+	a single-shot timer that ticks once when it starts.
+		
+	Three :start methods provide three alternative ways
+	to start a timer: (1) immediately (2) at a given time
+	(3) after a given period.
+				
+	:start can be called whenever the timer is not ticking 
+	periodically.  If :start is called when the first tick 
+	is pending, the new start time overrides the previous 
+	start time. If a given start time has already passed, 
+	the timer starts immediately.
+
+	:cancel prevents a timer from starting or stops a 
+	periodic timer if it's ticking.
+		
+	Each timer tick puts the timer in a release state.
+	There is only one level.  indicator:wait resets the 
+	timer release state. 
+		
+	Note:  Both timed and untimed waits can be called, but
+	timed :wait amounts to waiting on two timers.  If 
+	timed wait is called, a time limit must be given.
+}}
+
+{
+	general
+	{
+		begin ( etm period [opt] );
+
+		start [const];		-- immediately
+		
+		start ( etm when ) [const];
+
+		start ( utc when ) [const];
+
+		cancel [const];
+	}
+}

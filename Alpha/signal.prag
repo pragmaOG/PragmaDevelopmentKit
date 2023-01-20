@@ -1,0 +1,46 @@
+
+page signal in alpha@pragma
+
+
+type signal from indicator
+{{
+	A signal is a general purpose indicator.
+
+	Note: See alpha\indicator for more info.
+
+	A signal maintains an internal counter that defines
+	an indication level.  Each time the signal is raised, 
+	the level is incremented. Level ranges from zero to some
+	max defined during intialization. Any level above zero 
+	puts the signal in a release state.
+	
+	:raise increments the signal level.
+		
+	:lower decrements the signal level.
+
+	Note:  :raise and :lower are [const] because
+	they don't actually change the object instance
+	which encapsulates a system resource handle.
+
+	If auto_lower is 'true', indicator:wait and
+	:test automatically decrement the level. 
+		
+	If an initial time limit is given, it will be used
+	as the default :wait time limit.  If no initial
+	limit is given, timed :wait must specify a time
+	limit.  
+}}
+{
+
+	general
+	{
+		begin ( int max_level, int init_level, bool auto_lower, etm [opt] );
+
+		raise [const];
+		
+		lower [const];
+	}
+}
+
+
+

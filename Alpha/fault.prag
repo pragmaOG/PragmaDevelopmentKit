@@ -1,0 +1,123 @@
+
+page fault in alpha@pragma
+
+
+token fault_id ( 'generic', 'bug', 'format', 'value', 'access', 'resource', 'platform', 'system' );
+{{
+	'generic' - unspecified
+
+		This is the default when an app quits without 
+		specification.  In practice, an app should always
+		treat this condition as immediately fatal.
+
+	'bug' - a programming error was detected
+
+		Use 'bug' to identify invalid inputs and
+		logical inconsistencies.  In a perfect world,
+		bug faults will never occur in a tested app,
+		but of course, this is rarely true in reality.
+		Pragma does not have any provision for removing
+		quit points related to bug faults.
+
+	'format' - a data format error was detected
+
+		Use 'format' to identify formatting errors in
+		external data.  Alpha portability methods are the
+		primary source for this quit condition.
+
+	'access' - access to a shared resource was blocked
+
+		Use 'access' when concurrent contention for a
+		shared resource will not resolve.
+
+	'resource' - a dynamic resource was depleted
+
+		Use 'resource' when a dynamically allocated,
+		limited resource cannot be acquired.
+		
+	'platform'	- an invalid platform was detected
+
+		Use 'platform' when an expected feature or
+		capability of the host platform is missing or
+		insufficient.  These are usually related to
+		installation errors.
+
+	'system'  - an invalid system was detected
+
+		Use 'system' when a required app component ( e.g. 
+		file or servce) is missing or unavailable.  This
+		is for apps that are part of a distributed or
+		multi-process system.
+}}
+
+
+type fault -- intrinsic
+{{	
+	A fault encapsulates information about a quit
+	condition (disruption).
+		
+	The compiler automatically creates a fault when an
+	application quits.  The application provides 
+	an optional classifier and commentary in the quit 
+	expression.  The compiler adds source code location
+	info.
+
+	Faults are added to an internal trace which can be 
+	accessed in any fail block.
+
+	Note:  See alpha\trace.
+
+	Faults created by an application do not contain
+	location info.  However, if an existing fault is
+	referenced in a quit directive, the compiler will
+	add location info.
+
+	Note: Location includes book, page, and line number.
+
+	Faults are NOT intended to be used in normal error
+	handling.  Normal errors are those that can and
+	should be handled in the normal flow of execution.
+		
+	Faults should only be used to identify and locate
+	disruptions that are probably fatal. This includes
+	internal errors like residual program bugs and
+	external errors beyond the direct control of an 
+	application.
+		
+	Disruptions and faults are generally trapped in a
+	high level context where a decision can be made to
+	either adapt and retry, or leave.  Such a decision
+	should be made solely on the fault identifier. Other
+	information is informal and intended for post-mortem
+	diagnosis.  
+		
+	Clearly, fault identification is imprecise.  This
+	is resolutional.  Precise error identification is 
+	an aspect of normal processing.  The main purpose
+	of fault identification is to classify a disruptive 
+	condition just enough that an application might decide
+	to retry rather than leave.
+		
+	Note: Even this strategy is perhaps too ambiguous.
+	It's more likely that an application will choose to
+	retry or leave based on where a disruption is trapped
+	rather than what condition can be identified.  However,
+	it may be possible to rule-out certain conditions for
+	retry (e.g. 'generic' and 'bug' ).
+}}
+{
+	general
+	{
+		begin;									-- default
+
+		begin ( fault_id, expr comment [opt] );	-- specify
+
+		begin ( fault other );					-- copy
+
+		id [const] = proxy [sure,durable,actual,const] fault_id;
+		
+		comment [const] = proxy [sure,durable,actual,const] expr;
+		
+		location [const] = proxy [sure,durable,actual,const] expr;
+	}
+}

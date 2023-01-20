@@ -1,0 +1,139 @@
+
+page console in stock@pragma
+
+
+type console 
+{{
+	A console is thread-safe.  
+}}
+{
+	general
+	{
+		begin  -- system console
+		{
+			kernel\console_identify( no_addr, *handle hcon:begin );
+			if (" hcon |=| no_addr ") quit ( 'platform', 'no system console' );
+			mo:begin( hcon )( text err );
+			if (" not_null?( err ) ") quit ( 'platform', 'system console broken' );
+			mo.ready:begin( true );
+		}
+
+		begin ( text name )( text error )  -- named console
+		{
+			text:begin( name ):add_zero:detach()( addr pname, int );
+			kernel\console_identify( pname, *handle hcon:begin );
+			kernel\heap_free( pname );
+
+			if (" hcon |=| no_addr ")
+			{
+				error:begin:write( 'unknown console: ' ):write( name );
+				mo.ready:begin( false );
+			}
+			else
+			{
+				mo:begin( hcon )( error );
+				mo.ready:begin(" null?( error ) ");
+			}
+		}
+
+
+		make_text ()( text ) [const]  -- console compatible
+		{
+			if ( mo.ready ) output!text:begin( mo.utf, mo.endian );
+		}
+	
+				
+		read ( text input [var], int q )( text error ) 
+		{
+			if ( mo.ready )
+				mo.channel:read( *input, q )( error )
+			else
+				error:begin:write( 'not ready' );
+		}
+
+		read ( text input [var], unicode c )( text error )
+		{
+			if ( mo.ready )
+				mo.channel:read( *input, c )( error )
+			else
+				error:begin:write( 'not ready' );
+		}
+
+		read_line ()( text input, text error )
+		{
+			if ( mo.ready )
+			{
+				mo:make_text()( input );
+				mo.channel:read( *input, mo.eol )( error );
+			}
+			else
+			{
+				error:begin:write( 'not ready' );
+			}
+		}
+
+		write ( text output [var] )( text error )  
+		{
+			if ( mo.ready )
+				mo.channel.write( *output )( error )
+			else
+				error:begin:write( 'not ready' );
+		}
+
+		write ( text output [var] ) -- ignore errors
+		{
+			if ( mo.ready ) mo.channel.write( *output )( text );
+		}
+	}
+
+
+	misc
+	{
+		begin ( handle hcon )( text err )
+		{
+			kernel\console_open_channel( hcon, *handle hch:begin, *addr pnote:begin );
+			
+			if (" hch |not=| no_addr ")
+			{
+				mo.channel:begin( hch ); 
+
+				kernel\console_get_protocol( hcon, *int unit:begin, *word16 bom:begin, *int eol:begin );
+
+				switch ( unit )
+				{
+					case ( '1' ) mo.utf:begin ( 'UTF-8' );
+					case ( '2' ) mo.utf:begin ( 'UTF-16' );
+					case ( '4' ) mo.utf:begin ( 'UTF-32' );
+					else quit ( 'bug', 'unexpected code unit value' );
+				}
+
+				if (" bom |=| 'x:FEFF' ") mo:endian:begin ( 'big_endian' )
+				else if (" bom |=| 'x:FFFE' ") mo:endian:begin ( 'little_endian' )
+				else if (" bom |not=| 'x:0000' ") quit ( 'bug', 'invalid byte order mark' );
+
+				mo.eol:begin( eol );
+			}
+			else 
+			{
+				err:begin:write( 'could not open console channel [' );
+				if (" pnote |not=| no_addr ") err:write( text begin:attach( pnote ):trim_zero );
+				err:write( ']' );
+			}
+		}
+
+
+	}
+
+	alias channel = read_write_text_channel;
+
+	instance
+	{
+		bool		ready;
+		channel				[opt];
+		utf					[opt];
+		endian				[opt];  -- n/a for UTF-8
+		unicode		eol		[opt];
+	}
+
+}
+

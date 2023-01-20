@@ -1,0 +1,483 @@
+
+
+page random in test@steve [native]  --  not really native (validate syntax)
+uses containers@boost
+uses ( math@princeton as math, alpha@software_house )
+uses kernel@pragma as kernel
+
+
+local context thing TheThing:begin [var];	
+
+context
+{
+	widget the_widget [var];
+
+	fp2 pi:begin( '3.14159' ) [const];
+}
+
+context
+{
+	system the_system [var];
+
+	int min [const];
+
+	int max [const];
+
+	begin	-- initialization subroutine, automatic call 
+	{
+		the_system:begin;
+		min:begin( 'min' );
+		max:begin( 'max' );
+	}
+}
+
+
+{+++++++++++++++++++
+
+-- source exclusion can enclose narratives and remarks
+{{
+	blah, blah, blah
+}}
+
+
+
++++++++++++++++++++++}
+
+
+
+local subroutine add ( int a, int )( int ) [naf]
+{
+	thing:do_something()( list<link<thing>> ); 
+	
+	{{
+		Now let's
+		suppose
+		that i start writing a narrative
+	}}
+
+	foo ( a, input!int )( output!int );
+}
+
+
+local subroutine demo ( thing t [var], int a, int i [var] )
+{
+	if ( "is_actual<gadget>?( t )" )
+	{
+		t:as_actual<gadget>:reuse:begin;
+	}
+}
+
+
+type <x>collection<#>
+{
+	general method
+	{
+		foo ( <x> t ) [var]
+		{
+			int n:begin( <#> );
+		}
+	}
+
+	instance
+	{
+		field<'1'><'2'>  f;
+		field<'1'><word<'2'>> g;
+		<<x>set>set<'2'> s;		
+	}
+}
+
+	
+alias thing_list = variform<thing>list;
+
+alias
+{
+	word1 = word<'1'>;
+	word2 = word<'2'>;
+}
+
+
+
+token status ( 'pending', 'active', 'done' );
+
+
+token
+{
+	status ( 'pending', 'active', 'done' );
+
+	mode ( 'fast', 'slow' );
+}
+
+
+
+operation "a * b" = "mul( a, b )";
+
+operation
+{
+	"a + b" = "add( a, b )";
+	"a - b" = "sub( a, b )";
+	"a |op| b" = "do( a, b )";
+}
+
+
+subroutine
+{
+	gamma ()( fp2 x )
+	{
+	}
+
+	beta ( int )( int );
+}
+
+type thing;
+
+
+
+
+type foo [incomplete] from xyz, from abc 
+{
+	token selector ( 'this', 'that' );
+
+
+	general method
+	{
+		
+		begin 
+		{
+			@groc\x:add( '1' );		-- qualified ref to local
+			@page\x:begin;
+			int y:begin( @type\magic_number ) ;			
+
+			@book\z:begin;
+
+			mo.xyz:begin;		-- plain sub-object ref
+			@proc\mo.abc:begin;	-- qualified sub-object ref
+		}
+
+		is<xtype> ()( bool x ) [const]
+		{
+			@page\escape t;	-- reserved word fragments in ref is valid syntax
+
+		}
+
+		set_thing ( int x )( bool ) [const,naf]  -- naf to prevent functional call
+		{
+			@page\thing:begin( x );
+			output!bool:begin;
+		}
+
+		use_widget [const] = proxy [sure,actual] widget
+		{
+		}
+		
+
+		use_gadget [const] = proxy gadget ~g;  -- nominal; compiles but not complete
+
+
+		do_something ( int a [opt], int c [var] )( thing ) [var] with match? ( int a )( bool )
+		= proxy [sure,durable,actual,tbd] thing ~t
+		{
+			-- this is a test, if it had been an actual emergency
+
+
+			subroutine compare (( expr mode )) ( int item )( bool result )( extra )
+			{
+				{{
+					this is a narrative 
+					block comment
+				}}
+
+				-- this is a remark
+				-- so is this
+				-- and this
+			}
+
+			set<thing><'5'> my_things:begin;
+
+			<object>stack s:begin: then_do:		-- multiline call seqeunce
+			 and_then(): finally;
+
+			loop 
+			{
+				n:dec;
+				if ( "n |=| zero" ) escape;	-- loop until 
+			}
+
+			loop ( "n |>| zero" ) n:dec;	-- loop while	
+
+
+			try_this ( "n as fp2 + r" as int, x:add( '1' as fp2 ) as int );  -- resolution
+			and_this ( '1' as int as fp10 );
+
+			int x:begin(y);
+
+			x:foo( a, b, null, x, y )( int )( '1', a, b, null );  -- extra
+
+			int n:begin( "a + b + c" );
+			int n:begin( "a * b - c" );
+			int n:begin( "-a * -b + c" );
+			int n:begin( "-( a * b ) + c" );
+
+			thing t:begin( "list |del| item");
+			thing t:begin( "is_ok |?| increment( x ) |:| decrement( x )" );
+
+	
+			fp2 tanx:begin( "divide( sin(x), cos( x ) )" );
+
+			fp2 tanx:begin( "sin(x) / cos(x)" );
+
+			search( list )( bool result ) with compare (( 'case_sensitive' ));	
+
+			subroutine foo (( diverse<thing>list l [var] )) ( int i )( bool )
+			{
+				l:item( i ) ~item;
+				ok: begin( true );
+			}
+
+			iterate<int>( zero, '100', one )( bool ok ) with foo (( *list ));
+
+			loop ( list:search( item )( =bool ) with compare (( 'case sensitive' )) ) count:iterate;
+
+			cos( x )( fp2 result );
+
+			boost\setup()();
+
+			{
+				proxy [durable,actual,var] thing ~t;	
+
+			
+				if ( [ ~t ]:void?()( =bool ) ) ~t -> a_thing;
+
+				[ ~t ]:void?()( bool is_void ):stale?()( bool is_stale );
+				if ( "not( is_void |or| is_stale )" ) ~t:set_color( 'red' );
+
+				my_list:object( i ) ~item;
+				
+				[ my_list:object( i ) ~item ]:good?()( bool ok );
+				if ( ok ) ~item:foo;
+
+			}
+
+
+			int x:begin;
+
+			int y:begin( '0' );
+
+			y:add( '1' )( =int result ):sub( '1' );		-- result designation
+
+			list_of< thing > list:begin:insert ~t;
+
+			{
+				if ( ok ) y:increment else y:decrement;
+
+				int n:begin( "a * b" ):subtract( '1' );
+
+				isolate thing:do_something trap flag:raise;
+			}
+
+
+
+			int n:begin( '100' );
+
+
+			loop ( "n |>| zero" )	 
+			{
+				n:decrement;
+			}
+
+			loop
+			{
+				if ( "n |=| zero" ) escape;	
+			}
+
+			isolate
+			{
+				stock\list_of<link<thing>> it;
+
+				if ( "status |=| zero" )
+				{
+					thing t:begin( 'classic' );
+					t:copy()( thing t2 );
+				}
+				else if ( "status |=| one" )
+				{
+					thing t:begin( 'new' ); 
+				}
+				else
+				{
+					thing t:begin;		
+				}
+			}
+			trap
+			{
+				quit ( 'bug', 'shit happens' );
+			}
+
+			if ( a ) return
+			else if ( b ) return
+			else if ( c ) return
+			else return;
+
+
+			switch ( color )		-- if not null
+			{
+				case ( 'yellow', 'red', 'blue' )
+				{
+				}
+
+				case ( 'yellow', 'red', 'blue' ) ;
+
+				case ( yellow )		-- pure contant 
+				case ( red, blue ) 
+				{
+				}
+
+				case ( 'a' ) n:begin( '1' );
+
+				case ( 'b' ) n:begin( '2' );
+
+				case ( 'c' ) 
+				{
+					n:begin( '3' );
+				}
+
+				case ( 'd' )
+				{ 
+					if ( ok ) n:begin( '4' ) else n:begin(5);
+				}
+
+				case ( 'e' ) n:begin( '5' ); 
+
+				case ( 'blue' )
+				{
+				}
+				 
+				else if ( ok ) 
+				{
+					do_something;
+				}
+				else 
+				{
+				}
+
+			}
+			else quit;
+
+			split
+			{
+				{
+					loop ( "i |<| one_million" ) i:inc;
+				}
+
+				{
+					loop ( do_something()( =bool ) ); 
+				}
+			}
+
+	
+			for ( ~item in list ) ~item:do_something;
+
+			for ( ~item in list, int i )
+			{
+				~item:do_something;
+				if ( "~item:key |=| 'foo' " ) escape;
+			}
+			if ( "not_null?( i )" ) list:object( i ):do_something_else;
+	
+
+		}
+	}
+
+	abstract method		-- new this type
+	{
+		$zeta ( fp2 r );
+	}
+
+	
+	abstract method in xyz
+	{
+		[pwd] $gamma;	
+
+		[new] $delta ( int a )( int b )  
+		{
+		}
+
+		[pwd,final] $omega ( int z );	
+
+		[new,final] $epsilon ( int a )( int b )	
+		{
+		}
+				
+	}
+
+	abstract in abc
+	{
+		[tbd] $alpha;	
+
+		$gamma;	
+
+		$delta ( int a )( int b )  
+		{
+		}
+
+		[final] $omega ( int z );	
+
+		[final] $epsilon ( int a )( int b )	
+		{
+		}
+	}
+		
+
+	base method
+	{
+	}
+
+	misc method
+	{
+	}
+
+	context fp2 sqrt_two:begin( '1.414' ) [const];
+
+
+	instance
+	{
+		unique_thing;		-- anonymous, type name is unique in instance
+		fp2				x  ;
+		fp2				y  ;
+		fp2				z [opt];
+		set<int><'2'>	coord;
+		<xtype>			w;
+	}
+
+
+	image generic_t 't' [evident]
+	{
+		x		'X' ( 't' );
+		y		'Y' ( 't' );
+		z 		'Z' ( 't' );
+	}
+
+	image generic_b 'b' [native]
+	{
+		x			( 'b' );
+		y			( 'b' );
+	}
+
+	image 'b2' 
+	{
+		image 'b1';
+		z			( 'b' );
+	}
+
+	image 'b3'
+	{
+		list	( 'b' )( 'b' );
+		foo		( 'b' );
+	}
+	
+}
+
+subroutine foo
+{
+	x:goo( * " '2' * get_value()( =v )" );  -- ugly
+}
+

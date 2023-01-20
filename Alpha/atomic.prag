@@ -1,0 +1,120 @@
+
+page atomic in alpha@pragma
+
+{{
+	Atomic types are thread-safe.  All methods are performed
+	atomically.
+
+	:stv and :ldv are the necessary and sufficient methods for
+	implementing thread-safe calculation.  Other methods are 
+	provided for convenience.
+
+	Conditional :ldv performs the atomic eqivalent of
+
+	ldv ( <t> a, <t> x )( <t> v ) --load a if value is x
+	{
+		v:begin( o.v );	
+		if ( "o.v |=| x" ) o.v:reuse:begin( a );
+	}
+
+	If output v equals x, the new value is a and the value
+	makes a transition provided a is different from x. If 
+	a is not different from x, there is no point in per-
+	forming the method, and v = x = a.
+
+	Typical technique, given atomic x
+
+	x:stv()( <t> v1 );			-- get old value v1
+	<t> v2:begin( v1 ):op;			-- compute a new value v2
+	x:ldv( v2, v1 )( <t> v3 );	-- update if still old value
+	bool ok:begin( "v3 |=| v1" );	-- test operation
+}}
+
+
+
+
+type &bool
+{{
+	A generic spin method can be used to implement
+	thread synchronization that doesn't yield
+	using &bool:
+		
+	spin ( bool a )  --atomic
+	{
+		loop 
+		{
+			flag:ldv( "not( a )", a )( bool b );
+			if ( "b |=| a" ) escape;
+		}
+	}
+
+	Note: this is a "spin until" method.
+
+	signal pattern:
+
+		ready:begin ( false );
+		ready:wait_true;	-- response thread
+		ready:set_true;		-- control thread
+
+	access pattern:
+		
+		access:begin ( true );
+		access:wait_true;	-- begin access
+		access:set_true;	-- end access
+
+	lock pattern:
+
+		lock:begin ( false );	
+		lock:wait_false;	-- begin lock
+		lock:set_false;		-- end lock
+}}
+{
+	general
+	{
+		begin ( bool other );						-- bool conversion
+
+		stv ()( bool v ) [const];					-- store value out
+
+		ldv	( bool b, bool x )( bool v );			-- load value, conditional
+
+		and	( bool b );
+
+		or	( bool b );
+
+		xor	( bool b );
+		
+		not; 
+
+		spin ( bool b );
+
+		wait_true;		-- and set_false
+
+		set_true;	
+
+		wait_false;		-- and set_true
+
+		set_false;	
+
+	}
+}
+
+
+type &int  
+{
+	general 		
+	{
+		begin ( int other );				-- int conversion
+
+		stv ()( int x ) [const];			-- store value out
+
+		ldv ( int n, int x )( int v );	-- load value in, conditional
+
+		add ( int n );					
+
+		sub ( int n );			
+
+		inc;							
+
+		dec;
+	}
+}

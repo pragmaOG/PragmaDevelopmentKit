@@ -1,0 +1,194 @@
+
+page link in alpha@pragma
+
+
+type link<t> from link  -- intrinsic
+{{
+	A link is an object allocator.
+
+	<t> is the symbolic accessor type. In general, <t> may 
+	not be an actual type.
+
+	A link can create and bind a new (null) object for any 
+	complete type related to <t>.  The actual object type
+	is determined at :begin time using an adhoc method 
+	reference or a given typename.
+
+	A link is an instrinsic compiler type and the compiler
+	enforces proper adhoc type at compile time. Typename is
+	verfified at runtime.
+
+	Original linked objects must be initialized before use. 
+	Generally, this means that :deref must be called for <t>
+	access, then if the actual object type is a	subtype	of
+	<t>, a subsequent actual type access is required.
+		
+	For example, the following sequence illustrates creating 
+	and initializing an object of type widget (derived from
+	thing) using a link<thing>:
+		
+	link<thing>:begin<widget>:deref:as_actual<widget>:begin 
+
+	A new link can be initialized by copying an existing
+	compatible link.  An existing link is compatible with a
+	new link if the existing linked object can be accessed
+	using the new type.  Thus, if <t>:as<u> is not void, 
+	then a link<u> can be created from a link<t>.
+
+	In general, copy compatability cannot be determined	
+	until runtime.  However, the compiler can always deter-
+	mine that a subtype is compatible with its base	type(s),
+	so runtime verification can be skipped in some cases.
+
+	When a link is copied, a reference to an existing object
+	is copied; a new object is not created.  Thus, multiple
+	links can reference a single object. 
+
+	For example, in this synthetic type hierarchy
+
+				  A
+				 / \
+				B   C
+
+	A, B, and C are all	part of the same (synthetic) type,
+	but only A is a subtype (of	B and C).  If a link<B> lb
+	references an actual object of type A, a link<C> lc can 
+	be created by copying lb because it's compatible:  
+
+	link<B> lb:begin<A>;	-- link new object type A
+	link<C> lc:begin( lb ); -- copy compatible link
+
+	In this case, both lb and lc reference the same object, 
+	but lb can only call general B methods, while lc can 
+	only call general C methods (via :deref).
+
+ 	It's important to realize that two links with different
+	adhoc types	are distinct types even if they're 
+	compatible.  
+	
+	For instance, suppose a subroutine needs a link<t> 
+	input:
+
+		foo ( link<t> )
+
+	Calling foo with a link<u> is possible because a copy
+	conversion is always available. For example, if lw is
+	a link<widget>, the compiler always allows
+
+		foo ( lw )
+
+	because it can always find (generate) a conversion
+	method
+	
+		foo ( link<thing>:begin( lw ) )
+
+	However, the conversion may not be valid, and the
+	call will fail if the links aren't in fact compatible.  
+	
+	Note that link copy-conversion it not at all the same
+	thing as an intrinsic subtype to base-type input 
+	conversion, which always works too (provided the 
+	relationship exists). This can sometimes be confusing 
+	because copy-converting a subtype link to a base-type 
+	link may look like an intrinsic conversion, but it's
+	not.
+			
+	To summarize: two links with different adhoc types are
+	different (and two links with the same adhoc type are
+	the same).  However, two links with different adhoc 
+	types may be compatible (and are compatible) if they
+	can (do) both reference the same actual object. 
+
+	link<object> is a universal link because any link type
+	can be copy-converted to a link<object>.  However, the
+	reverse is not true.
+	
+	link<object>:begin( link<thing> );  -- always good
+	link<thing>:begin( link<object> );  -- may fail
+
+	
+		
+	Reference copying is an important aspect of dynamic
+	linking.  When a link is copied, an internal counter is
+	incremented to track the number of references open on a 
+	particular object.  As links go out of scope and get
+	deconstructed, the counter is decremented.  The object 
+	shared by all links is mantained until the reference 
+	count goes to zero.  Thus, a link's object accessor
+	(:deref) is sure and durable.
+
+	Note:  Reference counting is thread-safe.  Links are 
+	essential for sharing objects across threads.
+
+	Note:  Links can also be used to create heterogenous 
+	collections where the collection type is uniform.  
+
+	Note:  Links are also essential for creating dynamically
+	linked object collections like trees, lists, and 
+	networks.
+
+	Links are not portable.  However, since a link can be 
+	created from a typename, and those ARE portable, 
+	applications can devise ways to persist	and restore
+	links.
+
+	Although a single linked object is relatively easy to 
+	read and write, a complex network of links is signif-
+	icantly more difficult. In general, applications may 
+	have to devise a scheme to store links and objects 
+	separately.
+
+	The basic idea is to create a portable link using a 
+	typename and some other portable reference, e.g. an int
+	that indexes an object in a set of objects.
+
+	A portable link of this sort can be imported as typename
+	and int.  The typename is used to create a link to a
+	null object and the int can be used to lookup a copy of
+	the object for initialization.  Of course, where objects
+	may be multiply linked, there has to be a way to 
+	recognize when an original link has been restored so 
+	that additional links can copy it.
+
+
+	Links can be compared using standard comparison methods. 
+	Cross type comparisions are allowed, even if the links
+	are copy-incompatible.  Comparisons are based on the 
+	object's storage address, so equal links reference the 
+	same object.  Furthermore, if a:before?(b) is false and
+	b:before?(a) is false, then a and b are equal 
+	( "a |par| b" is true).
+		
+	Note:  Equality is persistent provided network linkage 
+	is properly restored using techniques already described.
+	However, ordinality is a completely transient property
+	and any ordered collection of links is only ordered for
+	a single runtime session.
+
+	Note: In some applications, it may be prefereable to
+	compare links by passing the comparison on to the linked
+	object.  A general solution is too complicated.  For 
+	particular scenarios, an application can define a new 
+	type that encapsulates a link and provides the desired 
+	pass-through methods.
+}}
+
+{
+	general 
+	{
+		begin;							-- create and bind null <t> object, <t> complete (enforced at compile time)
+
+		begin<xt>;						-- create and bind null <xt> object, <xt> complete subtype of <t> (enforced at compile time )
+
+		begin ( typename );				-- create and bind null object, name = complete <t> or subtype of <t> (may fail)
+
+		begin<link<xt>> ( link<xt> other );	-- copy compatible link  (may fail)
+
+		equal<link<xt>>? ( link<xt> other )( bool ) [const];
+
+		before<link<xt>>? ( link<xt> other )( bool ) [const];
+	
+		deref [const] = proxy [sure,durable,var] <t>;
+	}
+}
+
