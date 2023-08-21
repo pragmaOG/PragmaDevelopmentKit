@@ -1,0 +1,65 @@
+
+page object in alpha@pragma
+
+
+type object [incomplete] -- intrinsic, restricted
+{{
+	Type object is a universal abstract base type.
+
+	The compiler automatically implements a	hidden abstract
+	interface for every complete type in an application.
+	The implementation is final. 
+
+	object methods can be called regardless of an actual
+	object's initialization	state.  This is an exception to
+	the rule.
+		
+	:null? sets output 'true' if an object is not initial-
+	ized.
+
+	:not_null? sets output 'true' if an object is initial-
+	ized.
+
+	Note:  Contrary to convention, a "not" method is pro-
+	vided for convenience because usage is very common.
+
+	:is<t>? sets output 'true' if <t> is in the object's
+	actual type hierarchy.
+
+	:is_actual<t>? sets output 'true' if the object's
+	actual type is <t>.
+		
+	:as<t> binds an optional <t> proxy.	The proxy is void 
+	if <t> is not a type in the object's actual type hierarchy.
+
+	:as_actual<t> binds an optional <t>	proxy.  The proxy 
+	is void if <t> is not the object's actual type.
+
+	:typename binds a typename proxy.
+		
+	:reuse invokes a deconstruction/construction cycle
+	on an object. :reuse results in a null object that
+	can be reinitialized.
+}}
+{
+	general   
+	{
+		null? ()( bool ) [const];
+
+		not_null? ()( bool ) [const];
+
+		is<t>? ()( bool ) [const];		
+
+		is_actual<t>? ()( bool ) [const];	
+
+		as<t> [const] = <t> proxy [tbd,opt];		
+
+		as_actual<t> [const] = <t> proxy [tbd,opt];	
+
+		typename [const] = typename proxy [const];	
+
+		reuse;		
+	}
+}
+
+

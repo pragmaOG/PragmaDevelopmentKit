@@ -1,0 +1,132 @@
+
+page expr in alpha@pragma
+
+
+type expr -- intrinsic, external
+{{
+	An expr is a source code literal.
+		
+	Exprs are ascii character strings that have no inherent 
+	meaning in Pragma.  Applications use exprs to define object 
+	values, define tokens, identify external formats, and to
+	otherwise create lexical elements that can be expressed
+	in source code.
+
+	In code, a lexical expr is any sequence of characters 
+	enclosed by single quotes.  The compiler automatically 
+	creates and initializes an expr object for every expr
+	by copying data from the source file to the object 
+	instance.  Printable characters are generally copied
+	as-is while non-printable characteres are ignored.  The
+	caret ^ has special significance.
+
+	Note: Unlike other types, expr:begin( expr ) is not
+	a method for literal initialization.  Rather, it is
+	a method used to copy other exprs.  Only the compiler 
+	can initialize a literal expr.
+		
+	The caret ^ character denotes insertion of a character
+	that cannot otherwise be copied directly from the source
+	expr: i.e. a single quote, any unprintable character, or
+	the caret itself.
+
+	The caret sub-expressions are ^^ , ^', and ^nnn	where
+	nnn is a decimal value between 000 and 255. Note that 
+	any	decimal value greater than 127 is not standard ascii 
+	and conversion to unicode may or may not be supported
+	(see below).
+
+	When an expr object is initialized, the compiler
+	strips outer quotes and any editor inserted control
+	characters.  In particular,	carriage return (CR), line
+	feed (LF), and TAB are stripped.  Then, any caret sub-
+	expression is replaced by the special  character it 
+	represents. 
+		
+	Note:  CR, LF, and TAB are common editor inserted
+	control chars that are interpreted as source code
+	formatting, not part of the expr proper. If an appli-
+	cation wants to embed these chars, a caret  can be
+	used to insert the decimal value.  Spaces after CR and
+	LF should be avoided because they ARE retained and
+	mimic tabs when displayed at the start of a new line.
+
+	Application can synthesize exprs by constructing a 
+	series<ascii>.
+		
+	In a very general way, exprs provide a way to extend
+	the language.  Types can invent their own unique 
+	expressions, documenting or publishing the syntax and
+	semantics.  
+		
+	The Pragma compiler doesn't know anything about	expr
+	syntax or semantics, so object methods take over the
+	task of parsing and compilation.  Expr errors are
+	generally runtime, not compile-time, errors.
+
+	Note:  However, the Pragma compiler is capable of
+	executing certain :begin( expr ) methods at compile
+	time to pre-initialize objects and catch failures.
+
+	All expr methods are [const]. Once an expr has been
+	initialized, it cannot be changed.
+
+	Note:  An expr is not suitable for general purpose
+	text.  See stock\text for a general solution.
+
+	Several methods are provided for expr analysis: 
+	:length, :equal? and :before?, :read, :find and :scan.
+	
+	:extract methods extract ascii character objects. See
+	alpha\ascii for details.
+					
+	Binary formats incorporate a length or delimiter,
+	and characters are represented by one byte decimal
+	values between 0 and 255.
+
+	Text formats support conversion between 
+	external unicode and internal extended ascii.
+	Since unicode is native with standard (7 bit)
+	ascii, conversion is well defined and nominal for
+	characters between 0 and 127.  However, characters
+	between 128 and 255 can have various interpretations
+	depending on which version of extended ascii an 
+	application is using. Several common extensions are
+	supported, but in general, using characters between
+	128 and 255	introduces platform dependencies that
+	should be avoided.
+
+	See documentation for supported formats.
+}}
+{
+	general 	
+	{
+		begin ( indexed<ascii> );			-- synthetic
+
+		begin ( expr other );				-- copy
+
+		begin ( message [var], expr fex );	-- fread
+
+		fwrite ( message [var], expr fex ) [const];
+
+		equal? ( expr other, int q [opt] )( bool ) [const]; 
+
+		before? ( expr other )( bool ) [const];
+
+		length [const] = int proxy [const];
+
+		extract ( int i, int q )( expr ) [const];			-- sub-expression
+
+		extract ( int i )( ascii ) [const];					-- one char 
+
+		extract ( int i [opt], int q [opt] )( array<ascii> ) [const];  -- multiple chars
+
+		find ( expr other, int i [var] )( bool ) [const];
+
+		scan ( int i [var] ) [const] with stop? ( expr, int i )( bool );
+	}
+}
+
+
+
+

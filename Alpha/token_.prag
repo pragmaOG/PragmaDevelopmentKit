@@ -1,0 +1,63 @@
+
+page token_ in alpha@pragma
+
+{{
+	This is a trivial documentation page for fabricated 
+	token types.
+
+	Example....
+
+	source definition:
+
+	token foo ( 'x', 'y', 'zed' );
+
+	fabricated type:
+
+	type foo from enumerated  
+	{
+		general
+		{
+			begin ( expr vex );		-- literal (from source def)
+
+			begin ( foo other );	-- copy
+
+			as_expr [const] = expr proxy [const] ;
+
+			equal? ( foo other )( bool ) [const];
+
+			before? ( foo other )( bool ) [const];
+		}
+	}
+
+	
+	Tokens are enumerated in definition order, from
+	zero.
+
+	:as_int (enumerated) is used for selecting.
+
+	:as_expr can be used to write token values.
+
+	:equal? can be used to compare two tokens for equality.
+
+	A token's int value can be used to compare relative
+	order and other arithmetic relationships.  However, 
+	note that the enumeration value can change if the
+	definition order is changed, so any code that depends
+	on definition order also needs to be reviewed.  
+
+	Code that compares tokens for equality and/or evaluates
+	them in a select instruction is safe.  That is, new
+	token values can be added and values can be reordered
+	without affecting existing code.
+
+	if ( "f |=| 'x'" )
+
+	select ( f )  -- type foo
+	{
+		case ( 'x' );
+
+		case ( 'y' );
+
+		case ( 'zed' );
+	}
+}}

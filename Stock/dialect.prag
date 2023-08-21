@@ -1,0 +1,119 @@
+
+page dialect in stock@pragma
+
+{{
+	Useful subroutines, tokens, and operations that comprise
+	a stock Pragma dialect.
+
+
+	Equality operators are backed by :equal?.
+
+	Ordinality operators are backed by :before?.
+
+	Cardinality operators are backed by :less?.
+
+	Logical operators are backed by :and, :or, :xor, :not.
+
+	Arithmetic operators are backed by :add, :sub, :mul,
+	:div, :neg.
+
+
+	Following example demonstrates how operations
+	and formulas reduce code.  These are equivalent bool
+	object expressions:
+
+		"a |before| b"
+		"before?( a, b )"
+		a:before?( b )( bool-> )
+
+
+		"( a |before| b ) |and| ( b |before| c )"
+		"and( before?( a, b ), before?( b, c ) )"
+		a:before?( b )( =bool ):and( b:before?( c )( =bool ) )
+}}
+
+
+
+
+token sign ( 'positive', 'negative', 'neither' );
+
+
+subroutine	
+{
+	conditional<t> ( bool a, <t> b, <t> y ) = <t> proxy [const] ~p
+	{
+		if ( a ) ~p -> b else ~p -> c;
+	}
+
+	conditional<t> ( bool a, <t> b [var], <t> y [var] ) = <t> proxy [var] ~p
+	{
+		if ( a ) ~p -> b else ~p -> c;
+	}
+
+	fix<t><u> ( <t> a [opt], <u> b [opt] )
+	{
+		if ( "null?( a )" ) if ( "not_null?( b )" ) a:begin( b );
+	}
+}
+
+
+
+operation	-- equality 
+{
+	"a |=| b"		= "equal?( a, b )";
+	"a |not=| b"	= "not( equal?( a, b ) )";
+}
+
+
+operation	-- ordinality
+{
+	"a |before| b"		= "before?( a, b )";		
+	"a |after| b"		= "before?( b, a )";
+	"a |par| b"			= "not( or( before?( a, b ), before?( b, a ) ) )";
+}
+
+
+operation	-- cardinality 
+{
+	"a |<| b"		= "less?( a, b )";
+	"a |>| b"		= "less?( b, a )";
+
+	"a |not<| b"	= "not( less?( a, b ) )";
+	"a |>=| b"		= "not( less?( a, b ) )";
+
+	"a |not>| b"	= "not( less?( b, a ) )";
+	"a |<=| b"		= "not( less?( b, a ) )";  
+}
+
+
+operation	-- logic 
+{
+	"a |and| b"		= "and( a, b )";
+	"a |or| b"		= "or( a, b )";
+	"a |xor| b"		= "xor( a, b )";
+	"a |nand| b"	= "not( and( a, b ) )";
+	"a |nor| b"		= "not( or( a, b ) )";
+	"a |xnor| b"	= "not( xor( a, b ) )";
+}
+
+
+operation	-- arithmetic
+{
+	"a + b"			= "add( a, b )";
+	"a - b"			= "sub( a, b )";
+	"a * b"			= "mul( a, b )";
+	"a / b"			= "div( a, b )";
+	"-a"			= "neg( a )";
+
+	"a |+| b"		= "add( a, b )";
+	"a |-| b"		= "sub( a, b )";
+	"a |*| b"		= "mul( a, b )";
+	"a |/| b"		= "div( a, b )";
+	"|-|a"			= "neg( a )";
+
+	"a |mod| b"		= "mod( a, b)";
+}
+
+
+operation "a |?| b |else| c" = "conditional( a, b, c )";
+

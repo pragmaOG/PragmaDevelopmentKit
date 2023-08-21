@@ -1,0 +1,29 @@
+
+page system in stock@pragma
+
+--  SAMPLE IMPLEMENTATION (suitable for HelloWorld)
+
+
+durable system sys:begin;		-- well known system object 
+
+type system
+{
+	general method
+	{
+		begin 
+		{
+			subj.console:begin;  -- default console
+		}
+
+		console [const] = console proxy [var] ~cons
+		{
+			~cons -> subj.console;
+		}
+	}
+
+	instance
+	{
+		console;
+	}
+}
+

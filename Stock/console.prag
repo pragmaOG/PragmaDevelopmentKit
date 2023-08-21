@@ -1,0 +1,141 @@
+
+page console in stock@pragma
+
+
+type console 
+{{
+	A console is thread-safe.  
+}}
+{
+	general
+	{
+		begin  -- system console
+		{
+			kernel\console_identify( no_addr, *handle hcon:begin );
+			if ( "hcon |=| no_addr" ) quit ( 'platform', 'no system console' );
+			subj:begin_( hcon )( text err );
+			if ( "not_null?( err )" ) quit ( 'platform', 'system console broken' );
+			subj.ready:begin( true );
+		}
+
+		begin ( text name )( text error )  -- named console
+		{
+			text:begin( name ):add_zero:detach()( addr pname, int );
+			kernel\console_identify( pname, *handle hcon:begin );
+			kernel\heap_free( pname );
+
+			if ( "hcon |=| no_addr" )
+			{
+				error:begin:write( 'unknown console: ' ):write( name );
+				subj.ready:begin( false );
+			}
+			else
+			{
+				subj:begin_( hcon )( error );
+				subj.ready:begin( "null?( error )" );
+			}
+		}
+
+
+		make_text ()( text ) [const]  -- console compatible
+		{
+			if ( subj.ready ) output!text:begin( subj.utf, subj.endian );
+		}
+	
+				
+		read ( text input [var], int q )( text error ) 
+		{
+			if ( subj.ready )
+				subj.channel_:read( *input, q )( error )
+			else
+				error:begin:write( 'not ready' );
+		}
+
+		read ( text input [var], unicode c )( text error )
+		{
+			if ( subj.ready )
+				subj.channel_:read( *input, c )( error )
+			else
+				error:begin:write( 'not ready' );
+		}
+
+		read_line ()( text input, text error )
+		{
+			if ( subj.ready )
+			{
+				subj:make_text()( input );
+				subj.channel_:read( *input, subj.eol )( error );
+			}
+			else
+			{
+				error:begin:write( 'not ready' );
+			}
+		}
+
+		write ( text output [var] )( text error )  
+		{
+			if ( subj.ready )
+				subj.channel_.write( *output )( error )
+			else
+				error:begin:write( 'not ready' );
+		}
+
+		write ( text output [var] ) -- ignore errors
+		{
+			if ( subj.ready ) subj.channel_.write( *output )( text );
+		}
+	}
+
+
+	misc
+	{
+		begin_ ( handle hcon )( text err )
+		{
+			kernel\console_open_channel( hcon, *handle hch:begin, *addr pnote:begin );
+			
+			if ( "hch |not=| no_addr" )
+			{
+				subj.channel_:begin( hch ); 
+
+				kernel\console_get_protocol( hcon, *int unit:begin, *word16 bom:begin, *int eol:begin );
+
+				select ( unit )
+				{
+					case ( '1' ) subj.utf:begin ( 'UTF-8' );
+					case ( '2' ) subj.utf:begin ( 'UTF-16' );
+					case ( '4' ) subj.utf:begin ( 'UTF-32' );
+					else quit ( 'bug', 'unexpected code unit value' );
+				}
+
+				if ( "bom |=| 'x:FEFF'" ) subj:endian:begin ( 'big_endian' )
+				else if ( "bom |=| 'x:FFFE'" ) subj:endian:begin ( 'little_endian' )
+				else if ( "bom |not=| 'x:0000'" ) quit ( 'bug', 'invalid byte order mark' );
+
+				subj.eol:begin( eol );
+			}
+			else 
+			{
+				err:begin:write( 'could not open console channel [' );
+				if ( "pnote |not=| no_addr" ) err:write( text begin:attach( pnote ):trim_zero );
+				err:write( ']' );
+			}
+		}
+
+
+	}
+
+	nom type channel_ = read_write_text_channel;
+
+	instance
+	{
+		bool		ready;
+		channel_			[opt];
+		utf					[opt];
+		endian				[opt];  -- n/a for UTF-8
+		unicode		eol		[opt];
+	}
+
+}
+
+
+

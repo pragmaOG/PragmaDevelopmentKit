@@ -1,0 +1,45 @@
+
+page trace in alpha@pragma
+
+
+type trace -- intrinsic, restricted
+{{	
+	A trace is a source code locator.
+
+	Type trace is restricted.  It can't be subtyped
+	or used in another type instance. Thus, trace objects
+	are always local and actual.
+
+	Applications can create trace objects to capture
+	source code location info. Location is a formatted expr
+	that includes book name, page name, page file name, and 
+	line number.
+
+	Trace objects are created by the compiler when an
+	application quits.  If an application specifies an 
+	object type in the quit	expression, the compiler 
+	creates the specified object and attaches it to the 
+	trace object along with the location info.
+
+	Note: See alpha\fault for example of quit object type.
+
+	The compiler pushes a trace to an internal disruption
+	object which can be accessed in any trap block.  See
+	alpha\disruption.
+
+
+}}
+{
+	general
+	{
+		begin;  -- original (no object)
+
+		begin ( trace other );  -- copy
+		
+		location [const] = expr proxy [const];
+
+		object [const] = object proxy [const,base,opt];
+
+	}
+}
+

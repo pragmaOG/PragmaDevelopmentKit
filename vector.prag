@@ -1,0 +1,19 @@
+
+page vector in alpha@prag
+
+nom type
+{
+	<t>vector2 = <t>vector<'2'>;
+	<t>vector3 = <t>vector<'3'>;
+	<t>vector4 = <t>vector<'4'>;
+}
+
+type <t>vector<#> from <#>tuple<t>
+{{
+	A <t>vector<#> is a <#>tuple suitable for applications
+	in linear algebra.
+
+	<t> is a numeric type
+}}
+{
+}

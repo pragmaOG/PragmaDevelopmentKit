@@ -1,0 +1,743 @@
+
+page text in stock@pragma
+
+
+token pattern_type ( 'exact', 'similar', 'regex' );
+
+
+subroutine
+{
+	exact_match? ( text pattern [var], unicode c, sign d, expr fex )( bool yes )
+	{{
+		This coroutine works for all character sets. Pattern
+		characters and input characters	are matched one-for-one
+		exactly by code-point value.
+	}}
+	{
+		int code;
+		if ( "d |=| 'positive'" )
+			pattern:fread<int>( fex )( code )
+		else -- 'negative'
+			pattern:get_rp()( int mark ):fread<int>( fex )( code ):set_rp( mark ):dec_rp;
+			
+		if ( "code |not=| c:as_int" ) yes:begin( false )
+		else if ( "rp_end?( pattern )" ) yes:begin( true );
+	}
+
+
+	similar_match? (( ucdb ))( text pattern [var], unicode c, sign d, expr fex )( bool yes )
+	{{
+		This coroutine matches consecutive white-space in the 
+		pattern to consecutive input white-space, and matches 
+		pattern letters	to input letters regardless	of case.
+	}}
+	{
+	}
+
+
+	regex_match? (( ucdb ))( text pattern [var], unicode c, sign d, expr fex )( bool yes )
+	{
+	}
+
+}
+
+
+
+
+type text from message
+{{
+	A text object is a pure text message.
+
+	Text methods are designed to reduce the	tedium of 
+	formatting, parsing, and editing a pure text message. 
+	A pure text message is assumed to contain a stream of 
+	unicode characters (code points). 
+			
+	Text messages originate from an external source or 
+	they're synthetically composed by the application. 
+	External sources are i/o devices like keyboards,	
+	files, and network portals. 
+	
+	A text message can be initialized with a specific
+	encoding, or by default, platform-dependent encoding
+	is used.  
+
+	:get_encoding returns the message encoding.
+
+	:compatible? tests whether a message has the same
+	encoding as a given other, or if it is compatible
+	with platform-dependent defaults (if another is not
+	given).
+
+	:spawn initializes an output message with compatible
+	encoding.
+
+
+	Any object xxxx is text portable (i.e. type supports
+	portable text formats) can be read from, or written to,
+	a text message using a text format.
+	
+	The default format for formatted read and write is 't' 
+	(generic text).  More exact formats can be specified
+	explicitly.
+	
+	load/reserve...
+
+	To load individual characters at the end of a message,
+	call :reserve to set message size.  The first call
+	reserves room for a single code point.  The second call
+	examines the last code point and makes more room as
+	necessary.  If the second :reserve indicates false, the
+	character is completely encoded in one code point.
+
+	conversion ...
+
+	:merge copies q characters from a given source using
+	position cursors.  The number of characters actually
+	copied is assigned to output q2.  On return, source rp
+	and this wp will be increased by q2.  If q is null,
+	q2 will be not be limited by q.  This method should 
+	only be used to merge incompatible sources.  It will
+	work for compatible sources, but it's very inefficient.
+	Other methods are more efficeint when the source is 
+	compatible.
+
+	:add_zero writes a zero terminator at the end of a
+	message.  This method can be used to delimit a text
+	string xxxx will be given to a c-compatible sub-routine.
+
+	:trim_zero seeks to the first zero char and truncates
+	the message there.  If the first char is zero, the
+	message size will be zero.  If there is no zero term-
+	inator, the message won't be truncated.  This method
+	can be used to remove the delimiter and set logical 
+	size for strings returned by c-compatible subroutines.
+
+
+	synthesize (serial append) ...
+
+	:write copies a char source, converting as necessary.
+
+	:fwrite writes an object value under control of	a text
+	format. Method will fail if object doesn't support
+	specified or default format.
+
+		
+	analyze (serial read) ...
+
+	:read reads a specific number of chars and copies them
+	to a char output, converting as necessary. Reading 
+	ascii chars may fail if message is empty or content	
+	is not ascii.
+
+	:fread reads an object value under control of a	text 
+	format.  Reading object values may fail if object 
+	doesn't support specified or default format, or if 
+	message is empty, or if content is not a valid object
+	value expr.
+
+	:match reads chars under control of a pattern. Matching
+	is "strict" and will fail if message is empty or if the 
+	pattern doesn't match.
+	
+	:parse reads chars under control of a pattern and a
+	pattern co-routine.  This method is resilient to mis-
+	match and outputs specify progress.
+	
+
+	seek (random access)..
+
+	The methods move rp, forward or backward, a given number
+	of chars, or to a given char or pattern.
+
+
+	edit (using compatible paste buffer)
+
+
+
+
+	Serial read, match, and write move message cursors to
+	next position.
+
+	Generally, :seek moves rp to first matching char and 
+	returns number of chars matched, or moves rp to end
+	and number of chars matched is zero.
+		
+
+	Formatted read and match should be isolated to trap
+	formatting errors:
+
+
+	int q;
+	isolate	str:match( 'my dog has ' ):fread()( int q )
+
+
+	Pattern procs are called in a loop until output match
+	is not-null.
+}}
+{
+
+	general
+	{
+		begin ( utf f [opt], endian e [opt] )  -- original
+		{
+			subj:as<message>:begin( e, f );
+			translate_utf( f )( subj.code_unit, subj.code_fex );
+		}
+
+		begin ( text source [var] )			-- detach source
+		{
+			source:get_encoding()( utf f, endian e );
+
+			subj:as<message>:begin( e, f );
+			translate_utf( f )( subj.code_unit, subj.code_fex );
+
+			source:detach()( addr pmem, int size );
+			subj:attach( pmem, size );
+		}
+
+		begin ( text source )				-- copy source
+		{
+			source:get_encoding()( utf f, endian e );
+
+			subj:as<message>:begin( e, f );
+			translate_utf( f )( subj.code_unit, subj.code_fex );
+
+			subj:copy( source, zero )( int ); -- all
+			subj:set_wp( zero );
+		}
+
+		begin ( expr source )				-- copy expr, platform encoding
+		{
+		}
+	
+
+		-- encoding
+
+		get_encoding ()( utf, endian ) [const]
+		{
+			@utf:begin( subj:text_encoding );
+			@endian:begin( subj:byte_order );
+		}
+
+		compatible? ( text other [opt] )( bool yes ) [const]  
+		{
+			utf proxy ~f;
+			endian proxy ~e;
+			if ( "null?( other )" )
+			{
+				~f -> platform_utf;
+				~e -> platform_endian;
+			}
+			else
+			{
+				~f -> other:text_encoding;
+				~e -> other:byte_order;
+			}
+			yes:begin( "subj:text_encoding |=| ~f" );
+			if ( "not( yes )" ) return;
+			yes:and( "subj:byte_order |=| ~e" );
+		}
+
+		spawn ()( text t ) [const]	-- compatible
+		{
+			t:begin( subj:text_encoding, subj:byte_order );
+		}
+	
+
+		-- external load
+
+		reserve	 -- first
+		{
+			subj:get_size()( int size ):set_size( "size + subj.code_unit" );
+		}
+
+		reserve ()( bool again ) -- second
+		{
+			subj:get_rp()( int mark ):get_size()( int size );  -- get current rp and size
+			subj:set_rp( "size - subj.code_unit" ):predict_next_rp()( int new_size ); -- move rp to last code unit and predict new size
+
+			again:begin( "new_size |>| size" );
+			if ( again ) subj:set_size( new_size );
+
+			subj:set_rp( mark );	-- restore
+		}
+
+
+		-- conversion 
+
+		merge ( text source [var], int q [opt] )( int q2 )  -- using current pointers 
+		{
+			fix( q, int_max );
+			q2:begin;
+			translate_utf( source:text_encoding )( int, expr fex );
+			loop ( "( q2 |<| q ) |and| not( rp_end?( source ) )" )
+			{
+				source.message:fread<int>( fex )( int c );
+				subj:as<message>:fwrite<int>( c, subj.code_fex );
+				q2:inc;
+			}
+		}
+		 
+		add_zero
+		{
+			subj:set_wp_end:write<int>( zero, subj.code_fex );
+		}
+		
+		trim_zero  
+		{
+			subj:set_rp( zero ):seek_chr<unicode>( zero, 'positive' )( int ):set_size_rp;
+		}
+
+			
+		-- synthesize (serial write)
+
+		write ( unicode c )
+		{
+			subj:write_chr<unicode>( c );
+		}
+		
+		write ( ascii c )
+		{
+			subj:write_chr<ascii>( c );
+		}
+				
+		write ( indexed< unicode > s )
+		{
+			subj:write_str( s );
+		}
+
+		write ( indexed< ascii > s )
+		{
+			subj:write_str( s );
+		}
+
+		write ( expr e ) 
+		{
+			subj:write_str( e:extract()( =array ) );
+		}
+
+		write ( text t ) 
+		{
+			if ( "not( compatible?( subj, t ) )" ) quit ( 'bug', 'incompatible text' );
+			subj:as<message>:copy( t, null, zero )( int );
+		}
+			
+		fwrite<t> ( <t> x, expr fex [opt] )		
+		{
+			fix( fex, 't' );	-- generic text default
+			subj:as<message>:fwrite<t>( x, fex );
+		}
+
+		fwrite<t> ( <t> x, expr fex [opt] )( extra )  
+		{
+			fix( fex, 't' );	-- generic text default
+			subj:as<message>:fwrite<t>( x, fex )()( extra );
+		}
+							
+			
+		-- analyze (serial read, match, parse)
+
+		read ()( unicode c )
+		{
+			subj:read_chr<unicode>()( c );
+		}
+
+		read ()( ascii c )  
+		{
+			subj:read_chr<ascii>()( c );
+		}
+
+		read ( int q )( array<unicode> s )
+		{
+			subj:read_str<unicode>( q )( s );
+		}
+
+		read ( int q )( array<ascii> s )  
+		{
+			subj:read_str<ascii>( q )( s );
+		}
+				
+
+		fread<t> ( expr fex [opt] )( <t> x )	-- formatted object value
+		{
+			fix( fex, 't' );	-- generic text default
+			subj:as<message>:fread<t>( fex )( x );
+		}
+
+		fread<t> ( expr fex [opt] )( <t> x )( extra ) -- formatted object value, extra formats
+		{
+			fix( fex, 't' );	-- generic text default
+			subj:as<message>:fread<t>( fex )( x )( extra );
+		}
+				
+
+		match ( expr pattern, pattern_type [opt] )  -- strict (quits)
+		{
+			subj:match( *subj:spawn()( =text ):write( pattern ), @pattern_type );
+		}
+		
+		match ( text pattern [var], pattern_type [opt] ) -- strict (quits)
+		{
+			bool match;
+			fix( @pattern_type, 'similar' );
+			select ( @pattern_type )
+			{
+				case ( 'exact' )   subj:parse( *pattern )( match, int, int rp ) with exact_match?;
+				case ( 'similar' ) subj:parse( *pattern )( match, int, int rp ) with similar_match?;
+				case ( 'regex' )   subj:parse( *pattern )( match, int, int rp ) with regex_match?;
+			}
+			if ( match:not ) quit( 'format', 'pattern mismatch' );
+			subj:set_rp( rp );
+		}
+
+		parse ( text pattern [var] )( bool match, int q, int rp )  
+		 with match? ( text pattern [var], unicode, sign, expr fex )( bool )
+		{
+			if ( "not( compatible?( subj, pattern ) )" ) quit( 'bug', 'incompatible pattern' );
+			subj:parse( *pattern, 'positive' )( match, q, rp ) with match?;  
+		}
+
+
+		-- seek (serial access)
+					
+		
+		seek ( int n )( int n2 )  -- number of chars, signed
+		{
+			n2:begin;
+			if ( "( n |=| zero ) |or| rp_end?( subj )" ) return;
+			
+			if ( "n |>| zero" )
+			{
+				loop
+				{	
+					n2:inc;
+					subj:inc_rp;
+					n:dec;
+					if ( "( n |=| zero ) |or| rp_end?( subj )" ) escape;
+				}
+			}
+			else -- "n |<| zero"
+			{
+				loop
+				{	
+					n2:dec;
+					subj:dec_rp;
+					n:inc;
+					if ( "( n |=| zero ) |or| rp_end?( subj )" ) escape;
+				}
+			}
+		}
+		
+		seek ( ascii, sign [opt] )( bool )
+		{
+			subj:seek_chr<ascii>( @ascii, @sign )( @bool );
+		}
+
+		seek ( unicode, sign [opt] )( bool )
+		{
+			subj:seek_chr<unicode>( @ascii, @sign )( @bool );
+		}
+
+		seek ( expr pattern, sign [opt], pattern_type [opt] )( int q ) -- q = chars matched
+		{
+			subj:seek( *subj:spawn()( =text ):write( pattern ), @sign, @pattern_type )( q );
+		}
+
+		seek ( text pattern [var], sign [opt], pattern_type [opt] )( int q ) -- q = chars matched
+		{
+			fix( @pattern_type, 'exact' )
+			select ( @pattern_type  )
+			{
+				case ( 'exact' )   subj:seek( *pattern, @sign )( q ) with exact_match?;
+				case ( 'similar' ) subj:seek( *pattern, @sign )( q ) with similar_match?;
+				case ( 'regex' )   subj:seek( *pattern, @sign )( q ) with regex_match?;
+			}
+		}
+			
+		seek ( text pattern [var], sign [opt] )( int q ) -- q = chars matched
+		 with match? ( text pattern [var], unicode, sign, expr fex )( bool )
+		{
+			if ( "not( compatible?( subj, pattern ) )" ) quit( 'bug', 'incompatible pattern' );
+
+			fix( @sign, 'positive' );
+			if ( "@sign |=| 'neither'" ) quit( 'bug', 'invalid sign (neither)' );
+
+			loop 
+			{
+				subj:parse( *pattern, @sign )( bool match, q:reuse, int rp ) with match?;
+				
+				if ( "match |or| null?( rp )" ) escape; -- null rp means end
+
+				subj:set_rp( rp );
+				if ( "@sign |=| 'positive'" ) subj:inc_rp else subj:dec_rp;
+			}
+		}
+
+
+		-- edit (using wp and compatible paste buffer)
+
+		copy ( int q )( text t );
+
+		delete ( int q );
+				
+		insert ( text t [var] ); 
+
+		insert ( unicode c );
+
+		replace ( int q, text t [var] );  -- more efficient than :delete(q):insert(t)
+
+		replace ( unicode c );
+	
+	}
+
+	
+	misc 
+	{
+		spawn_pattern ( expr )( text )
+		{
+			if ( "@expr:length |=| zero" ) quit ( 'bug', 'no pattern' );  
+			subj:spawn()( @text ):fwrite<expr>( @expr, 't' );
+		}
+
+		write_chr<t> ( <t> c )
+		{
+			subj:as<message>:fwrite<int>( c:as_int, subj.code_fex );
+		}
+
+		write_str<t> ( indexed<t> s )
+		{
+			for ( ~c in s ) subj:as<message>:fwrite<int>( ~c:as_int, subj.code_fex );
+		}
+
+		read_chr<t> ()( <t> c )
+		{
+			c:begin( subj:as<message>:fread<int>( subj.code_fex )( =int ) );
+		}
+
+		read_str<t> ( int q )( array<t> s )
+		{
+			s:begin;
+			loop ( "( q |>| zero ) |and| not( rp_end?( subj ) )" ) 
+			{
+				s:push:begin( subj:as<message>:fread<int>( subj.code_fex )( =int ) );
+				q:dec;
+			}
+		}
+
+		seek_chr<t> ( <t> c, sign [opt] )( bool ) 
+		{
+			fix( @sign 'positive' );
+			if ( "@sign |=| 'neither'" ) quit( 'bug', 'invalid sign (neither)' );
+
+			loop
+			{
+				if ( "@sign |=| 'positive'" )
+					subj:as<message>:fread<int>( subj.code_fex )( int x )
+				else
+				{
+					subj:as<message>:get_rp()( int mark ):fread<int>( subj.code_fex )( int x ):set_rp( mark );
+					subj:dec_rp;
+				}
+
+				if ( "x |=| c:as_int" ) 
+				{
+					match:begin( true );
+					escape;
+				}
+
+				if ( "rp_end?( subj )" )
+				{
+					match:begin( false );
+					escape;
+				}
+			}
+		}
+
+
+		parse ( text pattern [var], sign )( bool match, int q, int rp ) 
+		 with match? ( text pattern [var], unicode, sign, expr fex )( bool ) 
+		{{
+			Output match is true if entire pattern is matched, otherwise false.
+
+			Output q is number of matching chars, even when match is false.
+
+			Output rp points to "next" char before/after last matching char,
+			unless it's null. Null means scan reached the end (this convention
+			doesn't require size query to detect end condition).
+			
+			Message rp is retored to it's original position.  
+		}}
+		{
+			q:begin;
+
+			if ( "rp_end?( subj )" )
+			{
+				match:begin( false );
+				return;
+			}
+
+			subj:get_rp()( int mark );
+
+			if ( "@sign |=| 'positive'" ) pattern:set_rp( zero ) else pattern:set_rp_last;
+			loop 
+			{
+				unicode c;
+				if ( "@sign |=| 'positive'" )
+					subj:read_chr<unicode>()( c )
+				else
+					subj:get_rp()( int mark2 ):read_chr<unicode>()( c ):set_rp( mark2 ):dec_rp;
+
+				match?( *pattern, c, d, subj.code_fex )( match ); 
+
+				if ( "not_null?( match )" )
+				{
+					if ( match ) q:inc;
+					escape;
+				}
+
+				q:inc;
+
+				if ( "rp_end?( subj )" )
+				{
+					match:begin( false );
+					escape;
+				}
+			}
+
+			subj:get_rp()( rp ):set_rp( mark );
+		}
+
+
+
+
+		inc_rp -- next code point
+		{
+			subj:predict_next_rp()( int rp ):set_rp( rp );
+		}
+
+
+		dec_rp -- prev code point
+		{{
+			This method moves message rp one code point backward.  It 
+			assumes rp is currently aligned on a code point.  If rp is
+			initially zero, it "wraps" to the end.
+		}}
+		{
+			subj:get_rp()( rp ); 
+			if ( "rp |=| zero" )
+			{
+				subj:set_rp_end;
+			}
+			else if ( "subj.code_unit |=| two" )
+			{
+				rp:sub( two );  -- prev code point
+				subj:set_rp( rp ):fread<word16>( 'b' )( word16 w );  
+				if ( "(w |>=| xDC00 ) |and| ( w |<=| xDFFF )" ) rp:sub( two );  -- sub 2 more if surrogate
+				subj:set_rp( rp ); 
+			}
+			else if ( "subj.code_unit |=| one" )
+			{
+				loop
+				{
+					rp:dec;
+					subj:set_rp( rp ):fread<word8>( 'b' )( word8 w ):set_rp( rp );
+					if ( "( w |and| xC0 ) |not=| x80" ) escape;		-- if not 10xx xxxx
+				}
+			}
+			else -- "subj.code_unit |=| four"
+			{
+				subj:set_rp( rp:sub( four ) ); 
+			}
+		}
+
+
+		predict_next_rp ()( int rp ) 
+		{{
+			This method predicts next properly aligned rp. It assumes rp is 
+			currently aligned and may move it one code unit to evaulate next
+			position.  Thus, rp should always be realigned after calling
+			this method (using predicted rp or initial rp).
+		}}
+		{
+			subj:get_rp()( rp ); 
+			if ( "subj.code_unit |=| two" )
+			{
+				subj:as<message>:fread<word16>( 'b' )( word16 w );
+				if ( "(w |<| xD800 ) |or| ( w |>| xDFFF )" )
+					rp:add( two )
+				else
+					rp:add( four );
+			}
+			else if ( "subj.code_unit |=| one" )
+			{
+				subj:as<message>:fread<word8>( 'b' )( word8 w );
+				if ( "w |<| x80" )					-- 0xxx xxxx
+					rp:inc
+				else if ( "zero?( w |and| x20 )" )	-- 110x xxxx
+					rp:add( two )
+				else if ( "zero?( w |and| x10 )" )	-- 1110 xxxx
+					rp:add( three )
+				else								-- 1111 0xxx
+					rp:add( four );
+			}
+			else -- "subj.code_unit |=| four"
+			{
+				rp:add( four );
+			}
+						
+		}
+	}
+
+
+
+	instance
+	{
+		expr code_fex;	
+		int	 code_unit;	-- bytes
+	}
+
+
+	durable  
+	{
+		word16 xD800:begin( 'x:D800' ) [const];
+		word16 xDC00:begin( 'x:D800' ) [const];
+		word16 xDFFF:begin( 'x:DFFF' ) [const];
+
+		word8  x80:begin( 'x:80' ) [const];
+		word8  x20:begin( 'x:20' ) [const];
+		word8  x10:begin( 'x:10' ) [const];
+		word8  xC0:begin( 'x:C0' ) [const];
+
+		int two:begin( '2' )   [const];
+		int three:begin( '3' ) [const];
+		int four:begin( '4' )  [const];
+	}
+
+
+	subroutine translate_utf ( utf )( int unit, expr fex )
+	{
+		select ( @utf )
+		{	
+			case ( 'UTF-8' ) 
+			{
+				unit:begin( one );
+				fex:begin( 'b:utf8' );
+			}
+
+			case ( 'UTF-16' )
+			{
+				unit:begin( two );
+				fex:begin( 'b:utf16' );  
+			}
+
+			case ( 'UTF-32' )
+			{
+				unit:begin( four );
+				fex:begin( 'b:utf32' );	
+			}
+		}
+	}
+			
+}
+

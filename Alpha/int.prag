@@ -1,0 +1,112 @@
+
+page int in alpha@pragma
+
+
+
+durable  -- pure constants
+{
+	int zero:begin( '0' ) [const];
+
+	int max_int:begin( 'max' ) [const];
+
+	int min_int:begin( 'min' ) [const];
+}
+
+
+
+type int -- fundamental, native, external
+{{
+	An int encapsulates the higest precision integer
+	type supported by the runtime environment.
+
+	See documentation for value expressions.
+
+	An int is portable. See documentation for supported
+	formats.
+
+	Format notes...  
+
+	Generic binary 'b' is supported for c compatability.
+
+	Specific binary formats include 3 common encodings
+	that differ in negative value representation (one's
+	complement, two's complement, and sign/magnitude).
+
+	Specific binary unicode formats UTF-8, UTF-16, and
+	UTF-32 are also supported. For now, presume format 
+	exprs are 'b:utf8', 'b:utf16', 'b:utf32'.  
+			
+	https://en.wikipedia.org/wiki/UTF-8
+	https://en.wikipedia.org/wiki/UTF-16
+
+	Specific binary 'b:ascii' writes a non-negative
+	value as one byte and reads the same.
+}}
+{
+
+	general 		
+	{
+		begin ( expr vex [opt] );			-- literal, default '0'
+
+		begin ( int other );				-- copy
+
+		begin<wt> ( <wt> w, expr fex );		-- word conversion (direct read)
+
+		begin ( message [var], expr fex );	-- fread
+
+		fwrite ( message [var], expr fex ) [const];
+
+		equal? ( int n )( bool ) [const];
+
+		before? ( int n )( bool ) [const];	
+
+		less? ( int n )( bool ) [const];
+	
+		ldv ( int n );
+
+		add ( int n );
+		add ( int n )( int ) [const];		
+
+		sub ( int n );
+		sub ( int n )( int ) [const];
+
+		mul ( int n );
+		mul ( int n )( int ) [const];	
+
+		div ( int n );
+		div ( int n )( int r );	
+		div ( int n )( int v, int r ) [const];	
+
+		mod ( int n );					
+		mod ( int n )( int ) [const];	
+
+		pow ( int n );
+		pow ( int n )( int ) [const];	
+
+		fma ( int m, int b );				-- fused mul add v = m*v + b
+		fma ( int m, int b )( int ) [const];
+
+		dis ( int n );						-- distance between v and n (abs diff)
+		dis ( int n )( int ) [const];
+
+		neg;	
+		neg ()( int ) [const];	
+
+		abs;	
+		abs ()( int ) [const];	
+
+		inc;
+		inc ()( int ) [const];	
+
+		dec;
+		dec ()( int ) [const];	
+	}
+}
+
+
+
+
+
+
+
+

@@ -1,0 +1,40 @@
+
+page enumerated in alpha@pragma 
+
+type enumerated  -- intrinsic
+{{
+	An enumerated type has countable unique values.
+
+	Enumerated types are associated with a unique
+	identical integer value.  The value must be greater
+	than or equal to zero, and it must uniquely identify
+	one, and only one, object value in the set of all
+	possible object values. 
+
+	Note:  Best practice is to assign ints contiguously
+	from zero.
+
+	An enumerated object's int value can be used to 
+	efficiently compare and sort objects in lieu of 
+	type-specific methods.  Applications convert the
+	object to int using method :as_int and then use
+	int methods to evaluate objects for equivalance
+	and relative order.  
+
+	Some enumerated types may define arithmetic and
+	other int relationships between objects.  
+		
+	Compiler generated token types, and alpha type
+	ascii are enumerated subtypes.  In general, 
+	character sets and other codes can and should
+	usually be enumerated.
+}}
+{
+	general 
+	{
+		begin ( int );
+
+		as_int [const] = int proxy [const];
+	}
+
+}

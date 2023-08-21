@@ -1,0 +1,98 @@
+
+page array in alpha@pragma
+
+
+token array_fit_to_mem ( 'tight', 'loose' );
+
+
+type array<t> from indexed<t> -- external
+{{
+	An array<t> is a resizable indexed object set.
+
+	<t> is the symbolic object type. The adhoc type must
+	be an actual type.  
+		
+	Methods that require a given index quit if the index is
+	invalid. A valid index is between zero and count 
+	(inclusive).  index = count is a valid insertion index.
+
+	If given index is valid, :insert always works provided 
+	there is available memory, and :delete always works by 
+	ignoring attempts to remove too many objects.
+
+	Note: delete without an index (default) when array is
+	empty doesn't do anything.
+
+	:object and :count are immediate methods that super-
+	cede abstract methods in base type. 
+
+	:count can return count plus an optional offset. A 
+	negative offset can be used to get a "reverse" index, but
+	if the return value is negative, it can't be used to
+	index an existing object.
+
+	:rank determines the index of a given object in an
+	ordered array. If output unique is true, there is no
+	other object of equal (par) rank in the array, and 
+	output i indexes the insertion point to maintain proper
+	order.  Otherwise, output i indexes an object of equal
+	rank already in the array. :rank uses a binary search 
+	algorithm that depends on <t>:before?<t>.
+
+	An array<t> is portable if <t> is portable.  
+
+	Inserting and deleting at the end of an array is most
+	efficient:
+
+	a:insert:begin( x )   -- push (copy x)
+	a:insert:begin( *x )  -- push (vacate x)
+	a:delete()( <t> x )   -- pop (vacate/copy to x)
+}}
+{
+	general   
+	{
+		begin ( array_fit_to_mem );						-- empty
+
+		begin ( array<t> other );						-- copy other 
+
+		begin ( array<t> other [var] );					-- vacate other 
+
+		begin ( message [var], expr fex )()( extra );	-- fread
+
+		fwrite ( message [var], expr fex )()( extra ) [const];
+				
+
+		count ( int offset [opt] )( int ) [const];		-- default offset = zero
+
+		object ( int i ) [const] = <t> proxy [tbd,temp]; 
+
+
+		rank ( <t> )( int i, bool unique ) [const];
+
+
+		insert ( int i, int q );						-- q null objs at i
+
+		insert ( int i [opt] ) = <t> proxy [var,temp];	-- one null obj at i (end), and access
+
+
+		delete ( int i, int q );						-- q objs at i
+
+		delete ( int i [opt] )( <t> );					-- vacate/copy one obj at i (end), then delete
+
+		delete ( int i [opt] );							-- one obj at i (end)
+
+
+		resize ( int q );								-- insert or delete at end, new count = q
+
+		shrink;											-- release excess memory 
+	}
+
+
+	abstract in indexed<t>
+	{
+		[final] ~count ()( int ) [const];	
+
+		[final] ~object ( int i ) [const] = <t> proxy [tbd,base,opt,temp]; 
+	}
+}
+

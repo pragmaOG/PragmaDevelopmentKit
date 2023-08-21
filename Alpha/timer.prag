@@ -1,0 +1,59 @@
+
+page timer in alpha@pragma
+
+
+type timer from indicator
+{{
+	A timer is a real-time indicator.
+
+	Note:  See alpha\indicator for more info.
+
+	:begin sets the period and execution mode.
+
+	If period is zero, the timer is non-periodic and ticks
+	once after it starts.  Otherwise, the timer ticks at 
+	regular intervals after it starts (i.e. periodically). 
+	The default	period is zero (non-periodic).
+
+	Execution mode is automatic or not.  If execution mode 
+	is automatic (auto='true'), :wait and :test auto-
+	matically reset the timer indication if it's set.  The
+	default execution mode is automatic for periodic timers, 
+	and	not-automatic (auto='false') for non-periodic
+	timers. 
+
+	Note: period > 0 and auto = 'false' is not a viable
+	configuration.
+
+
+	Three :start methods provide three alternative ways
+	to start a timer: (1) immediately (2) at a given time
+	(3) after a given period.
+				
+	If a specified start time has already passed, the
+	timer starts immediately. 
+
+	:cancel prevents a timer from ticking and clears the 
+	indication.
+
+	If :start is called again without an intervening 
+	:cancel, the timer is automatically cancelled first.
+			
+	Both timed and untimed :wait can be called, but timed
+	:wait amounts to waiting on two timers.  If timed wait 
+	is called, a valid wait time must be specified.
+}}
+{
+	general
+	{
+		begin ( etm period [opt], bool auto [opt] );
+
+		start [const];		-- immediately
+		
+		start ( etm when ) [const];
+
+		start ( utc when ) [const];
+
+		cancel [const];
+	}
+}

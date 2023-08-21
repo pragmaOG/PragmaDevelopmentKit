@@ -1,0 +1,225 @@
+
+page list1 in stock@pragma
+
+
+type list1 
+{{
+	One-way ped list with heterogenous nodes.
+
+	Go-methods move an internal cursor.
+	
+	Methods that reference "next," insert, remove, and get
+	the next node, relative the the internal cursor.  They
+	do not move the cursor.
+	
+	push and pull methods move the cursor and insert or
+	remove a node at the front or back.  
+}}
+{
+	general method
+	{
+		begin  -- empty
+		{
+		}
+
+		begin ( list1 source [var] )  -- vacate source
+		{
+			if ( "not_null?( source.first )" )
+			{
+				-- don't copy cursor (start front)
+				subj.first:begin( source.first );
+				subj.last:begin( source.last );
+				source.first:reuse;
+				source.last:reuse;
+				source.cursor:reuse;
+			}
+		}
+
+		empty? ()( bool yes ) [const]
+		{
+			subj.first:null?()( yes );
+		}
+
+		go_front  -- before first
+		{
+			subj.cursor:reuse;
+		}
+
+		go_last 
+		{
+			if ( "not_null?( subj.last )" ) subj.cursor:reuse:begin( subj.last );
+		}
+
+		go_next 
+		{
+			if ( "null?( subj.cursor )" )
+			{
+				if ( "not_null?( subj.first )" ) subj.cursor:reuse:begin( subj.first );
+			}
+			else
+			{
+				subj.cursor:deref:get_p()( p<node1> next );
+				if ( "not_null?( next )" ) subj.cursor:reuse:begin( next );
+			}
+		}
+		
+		get_next ()( p<node1> next ) [const]
+		{
+			if ( "not_null?( subj.cursor )" ) subj.cursor:deref:get_p()( next );
+		}
+
+		insert_next ( p<node1> pn )
+		{
+			subj:insert( pn );
+		}
+
+		insert_next<t> with init()( <t> )
+		{
+			make_<t>node()( p<node1> pn ) with init;
+			subj:insert( pn );
+		}
+
+		remove_next
+		{
+			if ( "not_null?( subj.cursor )" ) 
+			{
+				-- node after cursor
+				subj.cursor:deref:get_p()( next );
+				if ( "not_null?( next )" ) 
+				{
+					next:deref:get_p()( p<node1> next_next ):unp;
+					if ( "null?( next_next )" )
+						subj.last:reuse:begin( subj.cursor )
+					else 
+						subj.cursor:deref:set_p( next_next );
+				}
+			}
+			else if ( "not_null?( subj.first )" ) 
+			{
+				-- first node
+				subj.first:deref:get_p()( p<node1> next_next ):unp;
+				if ( "null?( next_next )" )
+				{
+					subj.first:reuse;
+					subj.last:reuse;
+				}
+				else 
+					subj.first:reuse:begin( next_next );
+			}
+		}
+
+		push_front<t> with init()( <t> )
+		{
+			subj:go_front:insert_next<t> with init;
+		}
+
+		push_back<t> with init()( <t> )
+		{
+			subj:go_last:insert_next<t> with init;
+		}
+
+		pull_first<t> ()( p<t> first )
+		{
+			subj:go_front:get_next()( p<node1> next );
+			if ( "not_null?( next )" ) 
+			{
+				first:begin( next );
+				subj:remove_next;
+			}
+		}
+	}
+
+
+	misc method
+	{
+		insert ( p<node1> pn ) 
+		{
+			if ( "not_null?( subj.cursor )" )  
+			{
+				-- after cursor
+				subj.cursor:deref:get_p()( p<node1> before ):set_p( pn ); 
+				if ( "null?( before )" )
+					subj.last:reuse:begin( pn )
+				else
+					pn:deref:set_p( before );
+			}
+			else if ( "not_null?( subj.first )" )
+			{
+				-- before first
+				pn:deref:set_p( subj.first );
+				subj.first:reuse:begin( pn );
+			}
+			else 
+			{
+				-- original
+				subj.first:begin( pn );
+				subj.last:begin( pn );
+			}
+		}
+	}
+
+	instance
+	{
+		p<node1> first  [opt];
+		p<node1> last   [opt];
+		p<node1> cursor [opt];
+	}
+
+
+	subroutine make_<t>node ()( p<node1> pn ) with init ()( <t> ) 
+	{
+		pn:begin< <t>node1 >:deref:as_actual< <t>node1 >:begin with init;
+	}
+	
+}
+
+
+type list1<t> from list1
+{{
+	list1 subtype with homogeneous <t>nodes.
+
+	Non-generic base methods are inherited as-is.
+
+	Generic base methods are superceded by non-generic
+	methods in this subtype.
+}}
+{	
+	general method
+	{
+		begin
+		{
+			subj.list1:begin;
+		}
+
+		begin ( list1<t> source [var] )  -- vacate source
+		{
+			subj.list1:begin( *source );
+		}
+
+		get_next ()( p<t> pt ) [const]
+		{
+			subj:list1:get_next()( p<node1> pn );
+			if ( "not_null?( pn )" ) pt:begin( pn );
+		}
+
+		insert_next with init()( <t> )
+		{
+			subj.list1:insert_next<t> with init;
+		}
+
+		push_front with init()( <t> )
+		{
+			subj.list1:push_front<t> with init;
+		}
+
+		push_back with init()( <t> )
+		{
+			subj.list1:push_back<t> with init;
+		}
+
+		pull_first ()( p<t> pt )
+		{
+			subj.list1:pull_first<t>()( pt );
+		}
+	}
+}

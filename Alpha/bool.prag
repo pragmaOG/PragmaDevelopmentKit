@@ -1,0 +1,59 @@
+
+page bool in alpha@pragma
+
+
+durable
+{
+	bool true:begin( 'true' ) [const];
+
+	bool false:begin( 'false' ) [const];
+}
+
+
+type bool  -- fundamental, intrinsic, native, external
+{{
+	A bool object encapsulates a boolean logic value.
+		
+	Type bool has special status in Pragma.  bool objects 
+	are evaluated in executable forms to control execution.
+
+	A bool can be initialized with a literal vex of	'true'
+	or 'false'. Interpretation is obvious.
+
+	Note: true and false are public pure constants that
+	can be used in lieu of corresponding exprs.
+
+	A bool value is portable. See documentation for
+	supported formats.
+
+	Generic binary 'b' is supported for c compatability.
+
+}}
+{
+	general
+	{
+		begin ( expr vex [opt] );		-- literal, default = 'false'
+
+		begin ( bool other );			-- copy
+
+		begin ( message [var], expr fex );	-- fread
+
+		fwrite ( message [var], expr fex ) [const];
+
+		equal? ( bool other )( bool )  [const];
+	
+		and ( bool other );
+		and ( bool other )( bool ) [const];
+
+		or ( bool other );
+		or ( bool other )( bool ) [const];
+
+		xor ( bool other );
+		xor ( bool other )( bool ) [const];
+
+		not;
+		not ()( bool ) [const];
+	}
+
+}
+

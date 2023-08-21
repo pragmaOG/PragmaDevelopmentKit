@@ -1,0 +1,116 @@
+
+page etm in alpha@pragma
+
+type etm  -- external
+{{
+	An etm measures elapsed time.
+
+	An etm measures the time difference between two
+	hypothetical points on an abstract msec time line. 
+	Etms are signed, so they can be used to offset a
+	reference point in two directions.
+
+	Note:  Etms are used to express realtime synchro-
+	nization points such as timer periods and wait 
+	time-outs.  They're also used to express the diff-
+	erence between two realtime clock ticks (e.g utc).  
+
+	Logically, an etm is a signed integer that has an
+	implicit unit of measure (millisec).  There are two
+	reasons for making etm a type distinct from int:
+		
+	(1) The magnitude of the difference between two time
+	ticks may overflow type int on some platforms. This
+	makes etm essential.
+
+	(2) A known time unit allows for built-in conversion
+	across various other time units. This makes etm 
+	convenient.
+
+	Note:  Time ticks are assumed to have 63 bits of 
+	unsigned precision.  Etms have 64 bits of signed
+	precision.  All Pragma implementations support no
+	less than 32 bits of int precision, but some may
+	support no more than 32 bits.
+
+	Formality notwithstanding, many if not most real
+	etms can be represented by an int.  :to_int 
+	converts the etm to an int if it can be represent-
+	ed.  Otherwise, the output is null.
+
+	Note: Compatible subroutines require integer time-
+	outs, so this is one application of :to_int.
+
+	Basic integer arithmetic methods are provided as 
+	are standard numeric comparison methods.
+
+	An etm can be initialized by specifying a combina-
+	tion of terms with different units.  Individual 
+	terms are converted to msecs and summed to get a 
+	net result in msecs.  
+		
+	Note: Terms are signed and conversion factors are 
+	"regular". Applications are responsible for any 
+	"leap" accounting that may be required.
+
+	Note:  Terms can be specified for msecs, secs, 
+	mins, hours, and days. All are [opt] except msecs.
+	Giving null or zero has an equivalent effect.
+
+	An etm is portable. See documentation for supported
+	formats.
+		
+	See documentation for value expressions.
+}}
+{
+	general 		
+	{
+		begin ( expr vex );					-- literal
+
+		begin ( int ms, int s [opt], int m [opt], int h [opt], int d [opt] );	-- synthetic
+
+		begin ( etm other );				-- copy
+
+		begin ( message [var], expr fex );		-- fread	
+
+		fwrite ( message [var], expr fex ) [const];	
+
+
+		equal? ( etm other )( bool ) [const];
+
+		before? ( etm other )( bool ) [const];
+		
+		less? ( etm other )( bool ) [const];
+	
+
+		as_int [const] = int proxy [const,opt];	
+
+		set ( etm other );	
+
+		add ( etm other );
+		add ( etm other )( etm ) [const];	
+
+		sub ( etm other );
+		sub ( etm other )( etm ) [const];
+
+		mul ( int n );
+		mul ( int n )( etm ) [const];		
+
+		div ( int n );						
+		div ( int n )( etm ) [const];	
+
+		rdiv ( int n )( etm r );		-- remainder out
+		rdiv ( int n )( etm t, etm r ) [const];	
+
+		mod ( int n );
+		mod ( int n )( etm ) [const];	
+
+		neg;
+		neg ()( etm ) [const];
+
+		abs;
+		abs ()( etm ) [const];	
+	}
+
+}
+

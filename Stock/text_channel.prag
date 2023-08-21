@@ -1,0 +1,172 @@
+page text_channel in stock@pragma
+
+
+
+{{
+	A text channel is a synchronous channel specialized for 
+	unicode	transfers.  
+	
+	Text messages given for transfer must be compatible with
+	the channel.
+	
+	Text channels read and write without a time limit. A
+	transfer was successful if an output error text is null.
+	Error text is encoded using platform defaults.
+
+	Writing is straightforward.  The base channel write 
+	method is called in a loop until the whole message is 
+	transferred. 
+
+	Reading is more complicated. The base channel is read 
+	one code unit at a time until a given count of char-
+	acters is transferred, or until a given delimiter
+	character is read.
+}}
+
+
+local subroutine
+{
+	read_channel_str ( sync_channel_reader reader [var], text [var], int q )( text error )  -- q chars
+	{
+		int need:begin( q );
+		loop
+		{
+			read_channel_chr( *reader, *@text )( error );
+			if (" not_null?( error ) ") escape;
+
+			need:dec;
+			if ( "need |=| zero" ) escape;
+		}
+	}
+
+	read_channel_str ( sync_channel_reader reader [var], text [var], unicode c )( text error )  -- delimited by c
+	{
+		@text:get_rp()( int mark ):set_rp_end;
+		loop
+		{
+			read_channel_chr( *reader, *@text )( error );
+			if ( "not_null?( error )" ) escape;
+
+			t:read()( unicode c2 );  -- last char
+			if ( "c2 |=| c" ) escape;
+		}
+		@text:set_rp( mark );
+	}
+
+
+	read_channel_chr ( sync_channel_reader reader [var], text [var] )( text error )
+	{
+		@text:reserve;  -- one code point
+		read_channel( *reader, *@text )( error );
+		if ( "null?( error )" )
+		{
+			@text:reserve()( bool again );
+			if ( again ) read_channel( *reader, *@text )( error );
+		}
+	}
+
+
+	read_channel ( sync_channel_reader reader [var], text [var] )( text error )
+	{
+		loop
+		{
+			reader:read( *@text )( channel_report report, text note );
+			
+			if ( "report |=| 'good'" ) escape;
+			
+			evaluate_transfer( report, note )( error );
+			if ( "not_null?( error)" ) escape;
+		}
+	}
+
+	write_channel ( sync_channel_writer writer [var], text [var] )( text error )
+	{
+		loop
+		{
+			writer:write( *@text )( channel_report report, text note );
+			
+			if ( "report |=| 'good'" ) escape;
+			
+			evaluate_transfer( report, note )( error );
+			if ( "not_null?( error)" ) escape;
+		}
+	}
+
+	evaluate_transfer ( channel_report, text note [opt] )( text error )
+	{
+		select( @channel_report )
+		{
+			case ( 'retry' );  -- partial transfer, no error
+
+			case ( 'closed' )
+			{
+				error:begin:write( 'channel closed' );
+			}
+
+			case ( 'error' )
+			{
+				error:begin:write( 'channel error [' );
+				if ( "not_null?( note )" ) error:write( note );
+				error:write( ']' );
+			}
+
+			else -- 'pending', 'busy', 'end', 'other'
+			{
+				error:begin:write( 'unexpected channel report [' ):write( @channel_report:as_expr ):write( ']' );
+			}
+		}
+	}
+}
+
+
+
+type read_only_text_channel from sync_read_only_channel
+{
+	general
+	{
+		begin ( handle )
+		{
+			subj:as<sync_read_only_channel>:begin( @handle );
+		}
+
+		read ( text msg [var], int q )( text error ) 
+		{
+			read_channel_str( *subj, *msg, q )( error );
+		}
+
+		read ( text msg [var], unicode c )( text error ) 
+		{
+			read_channel_str( *subj, *msg, c)( error );
+		}
+	}
+}
+
+
+type read_write_text_channel from sync_read_write_channel
+{
+	general
+	{
+		begin ( handle )
+		{
+			subj:as<sync_read_write_channel>:begin( @handle );
+		}
+
+		read ( text [var], int q )( text error ) 
+		{
+			read_channel_str( *subj, *@text, q )( error );
+		}
+
+		read ( text [var], unicode c )( text error ) 
+		{
+			read_channel_str( *subj, *@text, c )( error );
+		}
+
+		write ( text [var] )( text error )
+		{
+			write_channel( *subj, *@text )( error );
+		}
+	}
+}
+
+
+

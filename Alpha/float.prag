@@ -1,0 +1,179 @@
+
+page float in alpha@pragma
+
+
+nom type
+{
+	fp2		= fp<'2'>;
+	fp10	= fp<'10'>;
+}
+
+
+durable
+{
+	fp2 fp2_max:begin( 'max' ) [const];
+
+	fp10 fp10_max:begin( 'max' ) [const];
+
+	-- MORE CONSTANTS TBD
+}
+
+
+
+type fp< # > -- fundamental, native (fp2), external
+{{
+	fp is a generic floating point number type.
+		
+	<#> is the symbolic floating point radix.
+
+	Note: Only adhoc <#2> and <#10> are allowed. 
+	Applications should use the predefind synonyms for
+	adhoc type configuration.
+
+	Generic binary 'b' is supported for c compatability.
+
+
+	NARRATIVE PENDING...
+
+	what does Pragma guarantee about conversion 
+	to int and decomposition into parts?  Hmmm
+
+	conversion is subject to quit-fail and app
+	must predetermine value.
+
+	Decomposition is deprecated.
+
+	word fread/fwrite gives app a way to examine
+	and twiddle bits of an fp value.  This is
+	alternative to decomposition methods. Word size
+	must be native with portable format. This is
+	clearly an advanced feature.
+
+	inc and dec add and sub epsilon
+
+	div returns remainder 
+
+	rem returns low bits of internal division
+	useful for trig calcs??  See C++	remquo.
+
+	see math page for other common
+	functions, see C++
+
+		exp, log, trig, hyperbolic,
+		stastical, stats
+
+	exp(n,d) can handle special case of 1/2
+	(sqrt) and 1/3 (cube rt).  What else?
+		
+	C++ and IEEE define "hypot" which is
+	really used to calc distance/magnitude
+	of 2d/3d point/vector.  This should 
+	probably be a subroutine (not
+	method), since Alpha does not define
+	any vector types.
+
+	undirected rounding is round near.
+	One version allows specification of
+	directed half rounding.  The other
+	version (pure generic rounding) needs
+	internal round-to-even for half.
+
+	integer conversion trunctes fraction
+	and may quit-fail if value is too large
+}}
+{
+
+	general
+	{
+		begin ( expr vex [opt] );			-- literal, default = 0
+
+		begin ( fp2 x );	
+
+		begin ( fp10 x );
+
+		begin<wt> ( <wt> w, expr fex );		-- word conversion (direct read)
+
+		begin ( message [var], expr fex );	-- fread
+
+		fwrite ( message [var], expr fex ) [const];		
+
+		equal? ( fp<#> x )( bool ) [const];
+		
+		before? ( fp<#> x )( bool ) [const];	
+
+		less? ( fp<#> x )( bool ) [const];
+
+		precise? ( fp<#> u ) ( bool ) [const];
+
+		to_int ()( int n ) [const];	
+
+		ldv ( fp<#> x );
+
+		add ( fp<#> x );								
+		add ( fp<#> x )( fp<#> ) [const];	
+
+		sub ( fp<#> x );
+		sub ( fp<#> x )( fp<#> ) [const];
+
+		mul ( fp<#> x );
+		mul ( fp<#> x )( fp<#> ) [const];		
+
+		div ( fp<#> x );
+		div ( fp<#> x )( fp<#> ) [const];
+		div ( fp<#> x )( fp<#> q, fp<#> r ) [const];	--  q = "rpn( v/x )", r = "v - q * x" 
+
+		rem ( fp<#> x );									-- "v - ( rpn( v/x ) * x )" 
+		rem ( fp<#> x )( fp<#> ) [const];		
+
+		pow ( fp<#> x );									-- v to x power
+		pow ( fp<#> x )( fp<#> ) [const];
+		pow ( int n, int d );								-- v to (n/d) power 
+		pow ( int n, int d )( fp<#> ) [const];
+
+		scl ( int n );										-- "v * pow( #, n )"
+		scl ( int n )( fp<#> ) [const];
+
+		fma ( fp<#> m, fp<#> b );							-- fused mul add 
+		fma ( fp<#> m, fp<#> b )( fp<#> ) [const];
+
+		dis ( fp<#> x );									-- distance between v and x (abs diff)
+		dis ( fp<#> x )( fp<#> ) [const];
+
+		neg;									
+		neg ()( fp<#>) [const];
+
+		abs;
+		abs ()( fp<#> ) [const];
+
+		inc;												--  v + epsilon
+		inc ()( fp<#> ) [const];
+
+		dec;												--  v - epsilon
+		dec ()( fp<#> ) [const];
+
+		rpu ( fp<#> u [opt] );								-- round to precision up	
+		rpu ( fp<#> u [opt] )( fp<#> ) [const];
+
+		rpd ( fp<#> u [opt] );								-- round to precision down 
+		rpd ( fp<#> u [opt] )( fp<#> ) [const];
+
+		rpi ( fp<#> u [opt] );								-- round to precision in
+		rpi ( fp<#> u [opt] )( fp<#> ) [const];
+
+		rpo ( fp<#> u [opt] );								-- round to precision out
+		rpo ( fp<#> u [opt] )( fp<#> ) [const];
+		
+		rpn ( fp<#> u [opt] );								-- round to precision near 
+		rpn ( fp<#> u [opt] )( fp<#> ) [const];	
+
+		rpn ( fp<#> u [opt] )
+		with rh ( fp<#> x, fp<#> u )( fp<#> );				-- co-routine for .5
+
+		rpn ( fp<#> u [opt] )( fp<#> ) [const] 
+		with rh ( fp<#> x, fp<#> u )( fp<#> );
+	}
+
+}
+
+
+

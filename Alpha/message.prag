@@ -1,0 +1,327 @@
+
+page message in alpha@pragma
+
+
+token endian ( 'little-endian', 'big-endian' );		
+
+token utf ( 'UTF-8', 'UTF-16', 'UTF-32' );
+
+
+durable  
+{
+	endian	platform_endian [const];  
+	utf		platform_utf [const];
+}
+
+
+type message 
+{{
+	A message is an external data structure.
+
+	A message encapsulates heap memory and provides
+	methods for formatting and parsing arbitrary external
+	data.  Messages are used to communicate with external
+	entities.
+
+	Many Alpha types support precise external data formats.
+	Types that support external formats are "portable."
+	
+	:fread and :fwrite are generic methods that call object
+	methods to do the actual reading and writing.  :fread
+	copies data from message to object, while :fwrite copies
+	data from object to message. 
+	
+	Reading an object is object initialization, so :fread
+	calls object :begin.  Writing an object	has	const value
+	effect, and :fwrite calls object :fwrite
+		
+	Object message methods are given a var input message
+	and a const input expr that describes a particular 
+	external format (fex). Some types (especially managed 
+	object types) may require extra format exprs.  Supported 
+	formats and the exprs that describe them are type
+	dependent. Alpha formats are documented in the Alpha
+	Type Reference.
+
+	Note:  A particular type may support numerous external
+	formats and versions of those formats.	Format exprs
+	may simply enumerate the literal possibilities or they
+	may have syntactic forms that require interpretation.
+
+	Application types can define message methods that 
+	follow the same standard interface.  In principle, any
+	application object can be formatted as some sequence of
+	individually rendered sub-objects that are ultimately
+	rendered by Alpha message methods. 
+		
+	Applications can write their own methods but in most 
+	cases it's easier to simply define an image as part of
+	the type definition and let the compiler write both 
+	methods automatically. An image defines	a composition 
+	of sub-objects and their formats.  Each image is 
+	associated with a format label.  A type can have 
+	multiple images and the compiler will write methods
+	that select the correct one from a given fex.
+	
+	If an application chooses to write custom message
+	methods, it can usually do so by simply reading and
+	writing sub-objects in a straight forward serial
+	fashion.  However, more advanced applications may need
+	to format data in a random access fashion, which 
+	requires knowing the precise size of formatted data,
+	moving the position cursors, keeping track of unfor-
+	matted regions, and generally managing the overall size.
+		
+	Note: An application can format virtually any well-
+	defined data buffer using provided methods.  However, 
+	using the advanced methods requires a thorough under-
+	standing of usage to avoid creating a corrupt and
+	totally useless message.  So, programmer beware!
+
+	A message has two modal formatting options that 
+	supplement individual format specs:  endianess and
+	UTF (Unicode Transformational Format). Modal format
+	options are specified when a message is initialized.
+	Default values are consistent with the target plat-
+	form.
+
+	Note:  Platform defaults are defined by two public
+	data constants platform_utf and platform_endian.
+		
+	Endianess controls byte order.  For example, if an 
+	int fex specifies an 8 byte, twos-complement binary 
+	value, and a message is initialized with 
+	'little-endian', the 8 int bytes are serially written
+	least-significant to most-significant in the message.  
+	Conversly,  if the message is initialized with 
+	'big-endian', the 8 bytes are serially written most-
+	significant to least-significant in the message.
+
+	UTF encoding controls text encoding.  If an object
+	is stored in-message using any unicode text format, 
+	UTF encoding controls how the code point values are 
+	stored. UTF encoding does not apply to binary formats.
+	If 'UTF-16' or 'UTF-32' is used, endianess controls
+	byte order. 
+		
+	Note: A message may contain an arbitrary mix of 
+	objects stored using binary and unicode formats. A	
+	message that only contains objects stored as unicode
+	is a special case text message.  stock\text derives
+	from message and has methods that are specialized
+	for text handling.
+	
+	
+	A message maintains a block of heap memory to contain
+	data.  Message data is naturally intended for external 
+	consumption, so at some point the memory must be 
+	detached and given to some c-native subroutine 
+	(e.g. kernel subroutine) for final disposition.  
+	
+	Detaching message memory creates an unattached message
+	and an orphan memory block that must be reattached to
+	some message or freed by some other	procedure. 
+	Detaching memory does not affect the read/write position
+	cursors.
+
+	External heap memory can be attached (or reattached)
+	to an unattached message.  The memory usually originates 
+	from another message or from a c-native procedure.
+	The memory block may or may not contain	formatted data.
+	Once external memory is attached to a message, the message
+	owns the memory and applications must not allow the given
+	addr to be used in any way.
+	
+	When an application uses advanced methods to construct 
+	a message, it generally needs to manipulate	size and
+	two position cursors rp (read position or pointer) and
+	wp (write position or pointer).
+	
+	Size measures the logical extent of	formatted data
+	in bytes, rp defines the current (next) read position
+	in bytes, and wp defines the current (next) write
+	position in bytes.  Various methods directly set
+	these values, while object methods automatically update
+	these values.
+
+	Note: size measures the logical extent of formatted 
+	data.  The actual block size may be greater	than the
+	logical size. 
+	
+	Initially, size, wp, and rp are zero.  When size is 
+	zero, the heap memory addr is null. 
+	
+	wp and rp are constrained such that
+	
+		0 <= rp,wp <= size 
+	
+	at all times. rp and wp equal to size is a limit 
+	aka "end" position.
+					
+	Any attempt to read a message beyond the last character
+	will disrupt the app.  rp can be placed automatically 
+	or specifically to the end position, but this is not a 
+	valid read position.
+	
+	Writing objects automatically moves wp and automaticaly
+	increases size if wp exceeds size.  If wp is set beyond
+	the end, size is automatically increased.  Thus, it's 
+	not possible to disrupt the app by writing past	the end. 
+	However, "randomly" setting wp beyond the end creates an
+	unformatted "hole" in the data, so random access app-
+	lications must carefully track the location of formatted
+	data and holes.
+
+	Methods that increase size do not change wp or rp, but
+	if size is decreased, wp and rp may be adjusted	to their
+	limit positions to keep them in range.
+	
+	Detaching memory does not change wp or rp.
+	
+	Attaching memory may adjust wp and rp to their limit
+	positions to keep them in range. If a logical size is
+	not specified when mem is attached, the heap block size
+	is used by default. If a logical size IS specified, it's
+	verified (less or equal to block size).
+
+	Note: If preformatted memory is attached without a 
+	logical size spec, the heap block size is generally more
+	than the logical size, so applications must immediately
+	locate the logical end of formatted data and set logical 
+	size.  This is a common scenario for example, when
+	c-native subroutines return null-terminated strings
+	with no size information.
+
+	:set_rp_mod and :set_wp_mod align their respective pos-
+	itions on a	specified modulo boundary, if they aren't 
+	already aligned.  rp will not be moved beyond end, but 
+	wp will be properly placed, and size will be increased 
+	as necessary.
+	
+	
+	A message has an internal level value used for evident
+	images.  An evident image is a text format that has 
+	labeled and indented sub-objects similar to JSON.  Level
+	is used to maintain the format nesting level, which in
+	turn can be used to calculate the indention	of sub-
+	objects. Initial level is zero.
+
+	:inc_level and :dec_level adjust the level by one, plus
+	and minus respectively.  :get_level returns the current
+	level in an output.
+				
+	Intra-message :move shifts a q-byte block by n bytes, 
+	where n is signed: 
+
+		(1) block read q bytes from rp 
+		(2) set rp,wp = rp + n
+		(3) block write q bytes from wp
+
+	Thus, rp is at the start of the shifted block, and wp
+	is positioned on the next byte after the shifted block.
+	If the block is shifted up (positive) beyond size, 
+	size will be increased and wp will be at the end. Other-
+	wise, size is not changed. Shifting memory generally
+	leaves holes in the message, so the application must
+	adjust size (truncate) and/or fill holes as needed.
+	 
+	Inter-message :copy copies a q-byte block from a 
+	source message without changing source rp.  Thus, the
+	given source message is constant:
+	
+	(1) block read up to q bytes from source using given
+		rp or source rp
+	(2) set q2 = actual bytes read
+	(3) set this rp = this wp
+	(4) block write q2 bytes from this wp
+
+	If rp *is* specified, it overrides the source message 
+	rp.  If q is not specified (null), all data is copied 
+	from the source starting at the effective rp.  When the
+	method returns, (this) rp is at the start of copied 
+	data and (this) wp is at the end. Size is increased (or
+	not) as neccessary. Copying	memory may leave holes in
+	the message, so the	application must adjust size 
+	(truncate) and/or fill holes as necessary.
+}}
+{
+
+	general 
+	{
+		begin ( endian [opt], utf [opt] );		-- specify, platform dependent defaults
+
+		begin ( message source [var] );			-- vacate source
+
+		begin ( message source );				-- copy source
+
+
+		byte_order [const] = endian proxy [const] endian;
+
+		text_encoding [const] = utf proxy [const];
+
+
+		attach ( addr pmem, int size [opt] );
+
+		detach ()( addr pmem, int size ); 
+
+
+		set_size ( int );					-- size = given
+
+		set_size_wp;						-- size = wp
+
+		set_size_rp;						-- size = rp
+
+		get_size ()( int ) [const];			-- out = size
+
+
+		set_rp ( int );						-- rp = given
+
+		set_rp_last;						-- rp = size - 1
+
+		set_rp_end;							-- rp = size
+
+		set_rp_mod ( int );					-- rp = modulo boundary
+
+		get_rp ()( int ) [const];			-- out = rp
+
+		rp_first? ()( bool ) [const];		-- rp |=| zero ? 
+
+		rp_last? ()( bool ) [const];		-- rp |=| (size - 1) ? 
+
+		rp_end? ()( bool ) [const];			-- rp |=| size ?
+
+
+		set_wp ( int );						-- wp = given
+
+		set_wp_end;							-- wp = size
+
+		set_wp_mod ( int );					-- wp = modulo boundary
+
+		get_wp ()( int ) [const];			-- out = wp
+
+		wp_end? ()( bool ) [const];			-- wp |=| size ?
+
+
+		inc_level;							-- level = add 1
+
+		dec_level;							-- level = sub 1
+
+		get_level()( int ) [const];			-- out = level
+
+				
+
+		fread<t> ( expr fex )( <t> obj );			-- read object, one fex
+
+		fread<t> ( expr fex )( <t> obj )( extra );	-- read object, extra fex
+
+			
+		fwrite<t> ( <t> obj, expr fex );			-- write object, one fex
+
+		fwrite<t> ( <t> obj, expr fex )()( extra );	-- write object, extra fex
+
+
+		move ( int q, int n );						-- intra-message shift, see notes
+
+		copy ( message source, int q [opt], int rp [opt] )( int q2 );	-- inter-message copy, see notes
+	}
+}

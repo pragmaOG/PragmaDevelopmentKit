@@ -1,0 +1,38 @@
+
+page app in alpha@pragma
+
+type app [incomplete]
+{{
+	Type app is an adaptable base type with an abstract
+	entry-point method.
+
+	Every application must have at least one type that 
+	derives from app and implements abstract ~run.
+
+	A particular app subtype is designated when the
+	application is built.  The application startup routine
+	creates an object of the designated type, then calls 
+	~run.  
+
+	~run should monitor given stop signal and return
+	asap if it indicates.
+
+}}
+{
+	general method
+	{
+		begin;
+	}
+
+	abstract method
+	{
+		~run ( signal stop )( trace );
+	}
+}
+
+
+
+
+
+
+

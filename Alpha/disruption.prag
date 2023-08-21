@@ -1,0 +1,56 @@
+
+page disruption in alpha@pragma
+
+
+type disruption from indexed<trace>  -- intrinsic, restricted
+{{
+	A disruption is an indexed set of traces.
+
+	A global disruption object is automatically created 
+	when an application quits during normal execution. It
+	persists until the disruption is resolved by exiting a
+	a trap block.
+
+	Every time an application quits, a trace is added to 
+	the	the disruption. 
+
+	Note:  See alpha\trace for details.
+		
+	The current disruption object can only be referenced 
+	from a trap block using proxy name ~disruption.  This 
+	alias only exists in the local scope of a trap block 
+	and all the usual proxy rules apply. The disruption
+	proxy is [const] which implies that individual trace
+	proxies are also [const].
+
+	Trace objects occur in quit order.  Thus, the original
+	trace is first (index = 0).  The first trace always
+	exists, but trying to access a trace that does not
+	exist will fail.
+	
+	Note: disruption in a trap block prevents further
+	execution in that block. Thus, a trap that intends to
+	resolve and continue may itself fail.
+
+	:trace and :count are direct methods that supersede 
+	abstract methods in the base type.
+
+	A disruption is not portable. 
+}}
+{
+	general
+	{
+		-- begin methods are hidden
+
+		count [const] = int proxy [const];
+
+		trace ( int i ) [const] = trace proxy [const]; 
+	}
+
+	abstract in indexed<trace>
+	{
+		[final] ~count ()( int ) [const];	
+
+		[final] ~object ( int i ) [const] = trace proxy [tbd,base,opt,temp]; 
+	}
+}

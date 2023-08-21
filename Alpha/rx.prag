@@ -1,0 +1,146 @@
+
+page rx in alpha@pragma
+
+{{
+	Register types are thread-safe.  All methods are performed
+	atomically.
+
+	Two register subtypes, rxb and rxn, logically derive from 
+	a generic base type rx<t> where <t> is a bool or int,	
+	respectively. The inherited base methods are:
+
+	ldv ( <t> );				-- load value, unconditional
+
+	ldv	( <t> a, <t> x )( <t> v );	-- load value, conditional
+
+	stv ()( <t> )				-- store value 
+
+	Derivation is not actual. Application subtypes of rx<t>
+	aren't allowed and there aren't otherwise any type-
+	independent base methods to inherit.
+
+	Conditional :ldv performs the atomic eqivalent of
+
+	ldv ( <t> a, <t> x )( <t> v ) --load a if value is x
+	{
+		v:begin( subj.v );	
+		if ( "subj.v |=| x" ) mo.v:reuse:begin( a );
+	}
+
+	If output v equals x, the new register value is a. 
+	If output v is not equal to x, the register value is 
+	unchanged (equal v).  Note:  if output v equals x, and
+	a equals x, the register value is already a	and there
+	is no change. Thus, calling :ldv with a = x is  super-
+	fluous.
+
+	General technique, given register rx
+
+	rx:stv()( <t> v1 );			-- get old value v1
+	<t> v2:begin( v1 ):op;		-- compute a new value v2
+	rx:ldv( v2, v1 )( <t> v3 );	-- update if still old value
+	bool ok:begin( "v3 |=| v1" );	-- test operation
+
+
+	In addition to essential base methods, each type provides
+	additinoal methods that support common type-dependent,
+	atomic operations.
+
+}}
+
+
+
+
+type rxb  
+{{
+	bool register
+
+	A generic spin method can be used to implement
+	thread synchronization that doesn't yield using
+	brx:
+		
+	spin ( bool a )  --spin until a
+	{
+		loop 
+		{
+			brx:ldv( "not( a )", a )( bool b );
+			if ( "b |=| a" ) escape;
+		}
+	}
+
+	:wait_true and :wait_false are hard-coded spin methods.
+
+	:set_true and :set_false are hard-coded ldv methods.
+
+	signal pattern:
+
+		ready:begin ( false );
+		ready:wait_true;	-- response thread (set false)
+		ready:set_true;		-- control thread
+
+	access pattern:
+		
+		access:begin ( true );
+		access:wait_true;	-- begin access (set false)
+		access:set_true;	-- end access
+
+	lock pattern:
+
+		lock:begin ( false );	
+		lock:wait_false;	-- begin lock (set true)
+		lock:set_false;		-- end lock
+}}
+{
+	general
+	{
+		begin ( bool b );	-- conversion
+
+		stv ()( bool b) [const];
+
+		ldv ( bool b );					
+
+		ldv	( bool b, bool x )( bool v );
+
+		and	( bool b );
+
+		or	( bool b );
+
+		xor	( bool b );
+		
+		not; 
+
+		wait_true;		-- spin til true (ldv false)
+
+		wait_false;		-- spin til false (ldv true)
+
+		set_true;		-- ldv true
+
+		set_false;		-- ldv false
+	}
+}
+
+
+type rxn
+{{
+	integer register
+}}
+{
+	general 		
+	{
+		begin ( int n );	-- conversion
+
+		stv ()( int n ) [const];		
+
+		ldv ( int n );
+
+		ldv ( int n, int x )( int v );
+
+		add ( int n );					
+
+		sub ( int n );			
+
+		inc;							
+
+		dec;
+	}
+}

@@ -1,0 +1,33 @@
+
+page analog in alpha@pragma
+
+
+type analog  -- intrinsic,restricted
+{{
+	An analog representa a proxy.
+
+	An analog can only be created by the compiler using an 
+	analogue expression (proxy ref enclosed in square 
+	brackets). 
+	
+	Proxy analogs are always transient and anonymous.  The
+	analog captures the proxy's state at the point of creation
+	and it may change.
+
+	
+
+}}
+{
+	general
+	{
+		void? ()( bool ) [const];
+
+		not_void? ()( bool ) [const];
+
+		stale? ()( bool ) [const];
+
+		not_stale? ()( bool ) [ const ];
+
+		valid? ()( bool ) [const];	-- not_void |and| not_stale
+	}
+}

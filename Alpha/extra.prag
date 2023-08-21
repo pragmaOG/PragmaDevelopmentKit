@@ -1,0 +1,60 @@
+
+page extra in alpha@pragma
+
+
+type extra from indexed<object> -- intrinsic, restricted
+{{
+	An object of type extra contains unspecified objects
+	given to a procedure after inputs and outputs.
+
+	The compiler automatically creates and initializes
+	an extra object.
+		
+	Procedures that allow extra objects in a call define
+	an interface with an additional list containing a 
+	single object of type extra following inputs and 
+	outputs.  
+		
+	Applications must use runtime methods to determine
+	the actual type of objects contained by extra. 
+	Generally, a definite input is given to map the
+	objects in extra.
+
+	Note:  Because extra objects are unspecified, the 
+	compiler cannot	enforce integrity like it does
+	for inputs and outputs.
+
+	:object and :count are direct methods that supersede
+	abstract methods in base type. 
+
+	A given extra can be forwarded to another procedure
+	by giving it as the first object in a list of extra
+	objects passed to the other procedure.
+
+	Some applications may need to delete objects before
+	forwarding.  :delete removes a specified number of 
+	objects in given order.  
+
+	New objects given after extra when forwarding are
+	added to the list received by the other procedure.
+}}
+{
+
+	general 
+	{
+		-- begin methods are hidden
+
+		count [const] = int proxy [const];
+
+		object ( int i ) [const] = object proxy [var,base,temp]; 
+
+		delete ( int q [opt] );	  -- q objects from top
+	}
+
+	abstract in indexed<object>
+	{
+		[final] ~count ()( int ) [const];	
+
+		[final] ~object ( int i ) [const] = object proxy [tbd,base,opt,temp]; 
+	}
+}

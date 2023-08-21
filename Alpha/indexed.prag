@@ -1,0 +1,55 @@
+
+
+page indexed in alpha@pragma
+
+
+
+type indexed<t> [incomplete] -- intrinsic
+{{
+	indexed<t> is a generic base type for indexable	object
+	sets.
+		
+	<t> is the symbolic object type. 
+
+	Objects that derive from indexed<t> manage a homogeneous,
+	counted set of objects that are identified and accessed 
+	by numeric index.
+
+	Valid indexes range from zero to count - 1.
+
+	:object returns a sure proxy with tbd access.  It quits if
+	the index is out of range. In general, the proxy is temp
+	and nom.
+
+	Derived types may supersede :object with a more specific
+	accessor.
+
+	Application types that derive from indexed<t> must define
+	two	abstract methods to count and access objects.
+	
+	Objects in an indexed type are naturally ordered by 
+	index, but there is no presumption that objects with a
+	lesser index are "before" or "less" than those with a
+	greater index.
+
+	Indexed objects can be scanned by a for loop.
+}}
+{
+
+	general 
+	{
+		begin;
+
+		count()( int ) [const];	
+
+		object ( int i ) [const] = <t> proxy [tbd,base,temp]; 
+	}
+
+	abstract
+	{
+		~count ()( int ) [const];	
+
+		~object ( int i ) [const] = <t> proxy [tbd,base,opt,temp]; 
+	}
+}
+

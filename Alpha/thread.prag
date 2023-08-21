@@ -1,0 +1,92 @@
+
+page thread in alpha@pragma
+
+
+subroutine
+{
+	this_thread_id = expr proxy [const];  // obscure call
+
+	this_process_id = expr proxy [const] expr;  // obscure call
+}
+
+
+
+token thread_state ( 'new', 'starting', 'active', 'stopping', 'done', 'dead' );
+
+
+type thread [incomplete]
+{{
+	A thread is an adaptable base type with an abstract
+	entry-point method.
+
+	Thread lifetime is managed by the application.
+
+	The application implements :_run in a subtype to
+	complete this base type.  A thread can be controlled
+	and monitored by other threads using provided methods.  
+		
+	:_run is given two input signals, active and stop.
+	When the thread is properly running, it signals
+	active, then monitors stop while it performs other
+	duties.  When stop signals, :_run should respond
+	promptly and return.  If :_run is disrupted it should
+	copy the original trace to a given output.
+
+	An owning thread calls :start, :stop, and/or :kill
+	to control a thread's execution.  :_run is called
+	asynchronously by the system when :start is called.
+
+	A thread exists in one of six states: five normal
+	and one abnormal:
+
+	'new'		=> initialized
+	'starting'	=> :start called, but not active
+	'active'	=> signal indicated by :_run
+	'stopping'	=> :stop called, but not done
+	'done'		=> normal return from :_run 
+	'dead'		=> :kill called or :_run failed
+		
+	:wait returns when the thread state is not equal 
+	to the last state it returned on, or a specified 
+	time expires. It returns when the state is not 
+	'new' the first	time.  The state that releases 
+	:wait is copied to output thread_state. If it's
+	'dead', output trace is significant.  If a time
+	limit is not specified, :wait will not expire.
+
+	A thread cannot be incorrectly controlled. State
+	progression is well behaved.  Extraneous or redun-
+	dent control calls are ignored. Once a thread is 
+	'done' or 'dead', it cannot be restarted.
+}}
+{
+
+	general
+	{
+		begin;
+
+		start [const];
+
+		stop [const];
+
+		kill [const];
+
+		wait ( etm timeout [opt] )( thread_state, trace ) [const]; 
+
+		get_state ()( thread_state ) [const];
+
+		get_trace ()( trace ) [const];
+
+		get_id ()( expr ) [const];
+
+		get_handle ()( handle ) [const];
+	}
+
+	abstract 
+	{
+		~run ( signal active, signal stop )( trace );
+	}
+}
+
+
+

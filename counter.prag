@@ -1,0 +1,54 @@
+
+page counter in alpha@pragma
+
+
+type counter from indicator
+{{
+	A counter is a level indicator.
+
+	Note: See alpha\indicator for more info.
+
+	:begin sets the initial level, max level, intrinsic 
+	wait time, and execution mode.
+	
+	The default initial	level is zero.  
+	
+	The default max level is unconstrained. 
+
+	If the intrinsic wait time is null, a valid wait time must
+	be given in the :wait method call. 
+	
+	The default execution mode is automatic (auto='true').
+	If execution mode is automatic, :wait and :test 
+	automatically decrement the level if it's greater than 
+	zero.
+
+	:inc increases the level by one if the level is not
+	maxed.
+
+	:dec decreases the level by one if the level is	greater
+	than zero.  
+	
+	:reset sets the level to zero.
+	
+	A counter is indicated for any level greater than zero.  
+	
+	Note:  methods are [const] because they don't actually
+	change the object instance which encapsulates a system
+	resource handle.
+
+}}
+{
+	general
+	{
+		begin ( int init [opt], int max [opt], etm wait [opt], bool auto [opt] );
+
+		inc [const];
+
+		dec [const];
+		
+		reset [const];
+	}
+}
+
+

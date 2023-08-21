@@ -1,0 +1,45 @@
+
+page signal in alpha@pragma
+
+
+type signal from indicator
+{{
+	A signal is a condition indicator.
+
+	Note: See alpha\indicator for more info.
+
+	:begin sets the initial condition, intrinsic wait time,
+	and execution mode.
+	
+	The default initial	condition is 'false'.
+	
+	If the intrinsic wait time is null, a valid wait time must
+	be given in the :wait method call. 
+	
+	The default execution mode is automatic (auto='true').
+	If execution mode is automatic, :wait and :test auto-
+	matically clear the condition if it's set.
+
+	:set indicates the signal condition.
+		
+	:clear resets the signal condition.
+
+	Note:  :set and :clear are [const] because they don't
+	actually change the object instance which encapsulates
+	a system resource handle.
+
+}}
+{
+
+	general
+	{
+		begin ( bool init [opt], etm wait [opt], bool auto [opt] );
+
+		set [const];
+		
+		clear [const];
+	}
+}
+
+
+

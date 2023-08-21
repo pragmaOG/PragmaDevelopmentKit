@@ -1,0 +1,190 @@
+
+page p in alpha@pragma
+
+
+type p<t>   -- intrinsic
+{{
+	A p<t> is a single dependent object manager, aka 
+	"pointer to <t>."
+
+	<t> is the symbolic accessor type, which may be a
+	base type of the actual object type.
+
+	:begin<xt> creates a new (null) object for any complete
+	type <xt> derived from or equal to <t>. 
+
+	Pointer objects must be initialized before use. 
+	Generally, this means that :deref must be called for <t>
+	access, then if the actual object type is a	subtype	of
+	<t>, a subsequent actual type access is required.
+		
+	For example, the following sequence illustrates creating 
+	and initializing an object of type widget (derived from
+	thing) using a p<thing>:
+		
+	p<thing>:begin<widget>:deref:as_actual<widget>:begin 
+
+	A new pointer can be initialized by copying an existing
+	compatible pointer.  An existing poniter is compatible 
+	with another pointer if the two pointer types are
+	compatible.  That is, the new pointer type is related
+	to the existing pointer type.  Thus, if <t>:as<u> is not
+	void, then a p<u> can be created from a p<t>.
+
+	In general, copy compatability cannot be determined	
+	until runtime.  However, the compiler can always deter-
+	mine that a subtype is compatible with its base	type(s),
+	so runtime verification can be skipped in some cases.
+
+	When a pointer is copied, a reference to an existing 
+	object is copied; a new object is not created.  Thus,
+	multiple pointers can reference a single object. 
+
+	For example, in this synthetic type hierarchy
+
+				  A
+				 / \
+				B   C
+
+	A, B, and C are all	part of the same (synthetic) type,
+	but only A is a subtype (of	B and C).  If p<B> pb
+	references an actual object of type A, p<C> pc can 
+	be created by copying pb because it's compatible:  
+
+	p<B> pb:begin<A>;	-- new object type A
+	p<C> pc:begin( pb ); -- copy compatible p
+
+	In this case, both pb and pc reference the same object, 
+	but pb can only call general B methods, while pc can 
+	only call general C methods (via :deref).
+
+ 	It's important to realize that two pointers with 
+	different adhoc types are distinct types even if they're 
+	compatible.  
+	
+	For instance, suppose a subroutine needs a p<t> 
+	input:
+
+		foo ( p<t> )
+
+	Calling foo with a p<u> is possible because a copy
+	conversion is always available. For example, if pw is
+	a p<widget>, the compiler always allows
+
+		foo ( pw )
+
+	because it can always find (generate) a conversion
+	method
+	
+		foo ( p<thing>:begin( pw ) )
+
+	However, the conversion may not be valid, and the
+	call will fail if the links aren't in fact compatible.  
+	
+	Note that p copy-conversion it not at all the same
+	thing as an intrinsic subtype to base-type input 
+	conversion, which always works too (provided the 
+	relationship exists). This can sometimes be confusing 
+	because copy-converting a subtype p to a base-type 
+	p may look like an intrinsic conversion, but it's
+	not.
+			
+	To summarize: two links with different adhoc types are
+	different (and two links with the same adhoc type are
+	the same).  However, two links with different adhoc 
+	types may be compatible (and are compatible) if they
+	can (do) both reference the same actual object. 
+
+	p<object> is a universal p because any p type
+	can be copy-converted to a p<object>.  However, the
+	reverse is not true.
+	
+	p<object>:begin( p<thing> );  -- always good
+	p<thing>:begin( p<object> );  -- may fail
+
+	
+		
+	Reference copying is an important aspect of dynamic
+	linking.  When a p is copied, an internal counter is
+	incremented to track the number of references open on a 
+	particular object.  As pointers go out of scope and get
+	deconstructed, the counter is decremented.  The object 
+	shared by all pointers is mantained until the reference 
+	count goes to zero.  Thus, a pointer's object accessor
+	(:deref) is never opt or temp.
+
+	Note:  Reference counting is thread-safe. Pointers are 
+	essential for sharing objects across threads.
+
+	Note:  Pointers can also be used to create heterogenous 
+	collections where the collection type is uniform.  
+
+	Note:  Pointers are also essential for creating
+	dynamically linked object collections like trees, lists,
+	and networks.
+
+	Pointers are not portable.  However, since a pointer
+	can be created from a typename, and those ARE portable, 
+	applications can devise ways to persist	and restore
+	pointers.
+
+	Although a single pointer is relatively easy to 
+	persist, a complex network of pointers is significantly
+	more difficult. In general, applications usually have
+	to devise a scheme to store pointers and objects 
+	separately.
+
+	The basic idea is to create a portable pointer using a 
+	typename and some other portable reference, e.g. an int
+	that indexes an object in a set of objects.
+
+	A portable pointer of this sort can be imported as 
+	a typename and int.  The typename is used to create a
+	pointer to a null object and the int can be used to 
+	lookup a copy of the object for initialization.  Of 
+	course, where objects may have multiple pointers,
+	there has to be a way to recognize when an original 
+	pointer has been restored so that others can copy it.
+
+
+	Pointers can be compared using standard comparison methods. 
+	Cross type comparisions are allowed, even if the pointers
+	copy-incompatible.  Comparisons are based on the object's 
+	internal storage address, so equal pointers reference the 
+	same object.  Furthermore, if a:before?(b) is false and
+	b:before?(a) is false, then a and b are equal 
+	( "a |par| b" is true).
+		
+	Note:  Equality is persistent provided network linkage 
+	is properly restored using techniques already described.
+	However, ordinality is a completely transient property
+	and any ordered collection of links is only ordered for
+	a single runtime session.
+
+	Note: In some applications, it may be prefereable to
+	compare pointers by passing the comparison on to the 
+	linked object.  A general solution is too complicated.
+	For particular scenarios, an application can define a 
+	new type that encapsulates a pointer and provides the
+	desired pass-through methods.
+}}
+
+{
+	general 
+	{
+		begin;							-- create and bind null <t> object, <t> complete (enforced at compile time)
+
+		begin<xt>;						-- create and bind null <xt> object, <xt> complete subtype of <t> (enforced at compile time )
+
+		begin ( typename );				-- create and bind null object, name = complete <t> or subtype of <t> (may fail)
+
+		begin< p<xt> > ( p<xt> other );	-- copy compatible p  (may fail)
+
+		equal< p<xt> >? ( p<xt> other )( bool ) [const];
+
+		before< p<xt> >? ( p<xt> other )( bool ) [const];
+	
+		deref [const] = <t> proxy [var,base];
+	}
+}
+

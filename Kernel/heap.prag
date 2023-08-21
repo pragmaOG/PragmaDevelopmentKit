@@ -1,0 +1,35 @@
+
+page heap in kernel@pragma [native]
+
+
+subroutine
+{{
+	This subroutine group provides low level access	to the 
+	application dynamic memory heap.
+
+	Given:
+
+		bp	- block pointer
+		s	- size in bytes
+		i,j - byte offset from bp
+
+	If allocation or reallocation fails, bp will have a
+	value of pseduo-null on return.
+	
+	The other routines quit if given invalid or inconsistent
+	args.
+}}
+{
+	heap_alloc ( int s, addr bp [var] );
+
+	heap_realloc ( int s, addr bp [var] );
+
+	heap_size ( addr bp, int s [var] );    
+
+	heap_copy ( addr bp, int i, int s, int j );				-- intra-block
+
+	heap_copy ( addr bp, int i, int s, addr bp2, int j );	-- inter-block
+
+	heap_free ( addr bp );
+}
+

@@ -1,0 +1,64 @@
+
+page tuple in alpha@pragma
+
+
+alias
+{
+	double<t> = tuple<'2'><t>;
+
+	triple<t> = tuple<'3'><t>;
+
+	quad<t> = tuple<'4'><t>;
+}
+
+
+
+
+type <#>tuple<t> from indexed<t>  -- native, external
+{{
+	A <#>tuple<t> is a fixed-size indexed object set.
+
+	<#> is the symbolic tuple dimension. <t> is the symbolic
+	object type. Tha adhoc type must be an actual type.
+
+	Since object count is known at compile time, implemen-
+	tation can be optimized for a small number of objects 
+	by allocating them in the tuple instance.
+
+	Objects are created when the tuple is initialized. They 
+	(the objects) may also be intialized (or not) depending
+	on which :begin method is called.
+
+	:object is a direct method that supersedes abstract 
+	method in base type. 
+
+	A tuple is portable if <t> is portable. See Alpha type
+	reference for supported formats.
+
+	Generic binary 'b' is supported for <t> that also
+	support generic binary 'b'.
+}}
+{
+	general 
+	{
+		begin;									-- all objects null
+
+		begin ( <t> seed );						-- copy seed to all objects
+
+		begin ( tuple<#><t> other );			-- copy other  
+		
+		begin ( message [var], expr fex )()( extra ); -- fread
+
+		fwrite ( message [var], expr fex )()( extra ) [const];
+
+		object ( int i ) [const] = <t> proxy [tbd]; 
+	}
+
+	abstract in indexed<t>
+	{
+		[final]	~count ()( int ) [const];	
+
+		[final] ~object ( int i ) [const] = <t> proxy [tbd,base,opt,temp]; 
+	}
+}
+

@@ -1,0 +1,46 @@
+
+page unicode in alpha@pragma
+
+type unicode from enumerated
+{{
+	label = 'U+xxxxxx' where x is hex digit
+
+	Unicode properties are standardized and defined 
+	in a public Unicode Character Database (UCD).  The 
+	UCD is large and complex, and it's not practical to
+	encapsulate it behind property methods in this type.
+
+	Instead, the UCD will be provided as a stock type
+	which can be instantiated and used to look up 
+	properties given a unicode object. The stock UCD
+	will be based on a native book that provides
+	access to the public data (the native book
+	and public UCD will be delivered with the PDK).
+
+	https://en.wikipedia.org/wiki/Unicode_character_property
+
+	A unicode object is portable but applications are
+	limited.  The primary fex is either 'label' (as expr)
+	or 'code' (as int) and an extra	fex specifies how to
+	format the label or code.
+}}
+{
+	general
+	{
+		begin ( expr label )	-- vex
+
+		begin ( int code )		--enum value
+
+		begin ( unicode other )	-- copy
+
+		begin ( message m [var], expr fex )()( extra )  -- fread
+
+		fwrite ( message m [var], expr fex )()( extra ) [const]
+
+		equal?( unicode other )( bool yes ) [const]
+
+		before?( unicode other )( bool yes )[ const]
+
+		label [const] = expr proxy [const]
+	}
+}
